@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  pg:
+    container_name: pg
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USERNAME: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - ${POSTGRES_PORT}:5432
+    volumes:
+      - pgData:/var/lib/postgresql/data
+    networks:
+        - pg
+    restart: unless-stopped
+
+  pgAdmin:
+    container_name: pgAdmin
+    image: dpage/pgadmin4:8
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - ${PGADMIN_DEFAULT_PORT}:80
+    volumes:
+      - pgAdmin:/var/lib/pgadmin
+    networks:
+      - pg
+    restart: unless-stopped
+
+volumes:
+  pgData:
+  pgAdmin:
+
+networks:
+  pg:
+    driver: bridge
