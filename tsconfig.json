@@ -16,6 +16,14 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@libs/options": [
+        "libs/options/src"
+      ],
+      "@libs/options/*": [
+        "libs/options/src/*"
+      ]
+    }
   }
 }
