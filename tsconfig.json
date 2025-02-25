@@ -18,6 +18,12 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
+      "@libs/configs": [
+        "libs/configs/src"
+      ],
+      "@libs/configs/*": [
+        "libs/configs/src/*"
+      ],
       "@libs/options": [
         "libs/options/src"
       ],
