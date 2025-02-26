@@ -1,14 +1,18 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
+import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm'
 import { ERoles } from '@src/role/types'
+import { User } from '@src/user/entities'
 
 @Entity()
 export class Role{
     @PrimaryGeneratedColumn('uuid')
-    id: string
+    readonly id: string
 
     @Column({type:'enum',enum:ERoles,unique:true})
     value:ERoles
 
     @Column({nullable:true})
-    description:string
+    description?:string
+
+    @ManyToMany(()=>User,user=>user.roles)
+    users:User[]
 }
