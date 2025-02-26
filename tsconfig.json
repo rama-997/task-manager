@@ -29,7 +29,9 @@
       ],
       "@libs/options/*": [
         "libs/options/src/*"
-      ]
+      ],
+      "@src/role": ["src/role"],
+      "@src/role/*": ["src/role/*"],
     }
   }
 }
