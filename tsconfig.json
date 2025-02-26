@@ -54,6 +54,18 @@
       ],
       "@src/role/*": [
         "src/role/*"
+      ],
+      "@src/token": [
+        "src/token"
+      ],
+      "@src/token/*": [
+        "src/token/*"
+      ],
+      "@src/user": [
+        "src/user"
+      ],
+      "@src/user/*": [
+        "src/user/*"
       ]
     }
   }
