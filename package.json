@@ -92,6 +92,7 @@
       "<rootDir>/libs/"
     ],
     "moduleNameMapper": {
+      "^@libs/common(|/.*)$": "<rootDir>/libs/common/src/$1",
       "^@libs/configs(|/.*)$": "<rootDir>/libs/configs/src/$1",
       "^@libs/decorators(|/.*)$": "<rootDir>/libs/decorators/src/$1",
       "^@libs/options(|/.*)$": "<rootDir>/libs/options/src/$1"
