@@ -24,14 +24,30 @@
       "@libs/configs/*": [
         "libs/configs/src/*"
       ],
+      "@libs/decorators": [
+        "libs/decorators/src"
+      ],
+      "@libs/decorators/*": [
+        "libs/decorators/src/*"
+      ],
       "@libs/options": [
         "libs/options/src"
       ],
       "@libs/options/*": [
         "libs/options/src/*"
       ],
-      "@src/role": ["src/role"],
-      "@src/role/*": ["src/role/*"],
+      "@src/auth": [
+        "src/auth"
+      ],
+      "@src/auth/*": [
+        "src/auth/*"
+      ],
+      "@src/role": [
+        "src/role"
+      ],
+      "@src/role/*": [
+        "src/role/*"
+      ]
     }
   }
 }
