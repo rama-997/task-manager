@@ -8,8 +8,7 @@ import { Role } from '@src/role/entities'
 import { getRepositoryToken } from '@nestjs/typeorm'
 import { HttpExceptionFilter } from '@libs/common'
 import { TokenService } from '@src/token/token.service'
-import { createRoleDtoMock } from '@src/role/mocks'
-import { ERoles } from '@src/role/types'
+import { createRoleDtoMock, updateRoleDtoMock } from '@src/role/mocks'
 import { userPayloadMock } from '@src/token/mocks'
 import { UserPayload } from '@src/token/types'
 
@@ -76,4 +75,21 @@ describe('AppController (e2e)', () => {
                 expect(result.id).toBe(role.id)
             })
     })
+
+    it('PATCH /role/:id', async () => {
+        const role=await roleRepo.save(createRoleDtoMock)
+        const { accessToken } = await tokenService.authTokens(userPayloadMock as UserPayload)
+        return request(app.getHttpServer())
+            .patch(`/role/${role.id}`)
+            .auth(accessToken, { type: 'bearer' })
+            .send(updateRoleDtoMock)
+            .then(res => {
+                if(res.error) throw { ...res.error }
+                const result=res.body as Role
+
+                expect(result).toEqual(expect.objectContaining(updateRoleDtoMock))
+                expect(result.id).toBe(role.id)
+            })
+    })
+
 })
