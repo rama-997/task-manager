@@ -3,6 +3,8 @@ import { TokenService } from './token.service'
 import { JwtService } from '@nestjs/jwt'
 import { User } from '@src/user/entities'
 import { userMock } from '@src/user/mocks/user.mock'
+import { UserPayload } from '@src/token/types'
+import { userPayloadMock } from '@src/token/mocks'
 
 describe('TokenService', () => {
     let service: TokenService
@@ -18,22 +20,22 @@ describe('TokenService', () => {
     })
 
     describe('authTokens', () => {
-        let user:Partial<User>
+        let userPayload:Partial<UserPayload>
 
         beforeEach(async () => {
-            user=userMock
+            userPayload=userPayloadMock
         })
 
         it('should get tokens', async () => {
             jest.spyOn(jwtService,'signAsync').mockResolvedValueOnce('access')
             jest.spyOn(jwtService,'signAsync').mockResolvedValue('refresh')
 
-            const res=await service.authTokens(user as User)
+            const res=await service.authTokens(userPayload as UserPayload)
 
             expect(res.accessToken).toBeDefined()
             expect(res.refreshToken).toBeDefined()
-            expect(jwtService.signAsync).toHaveBeenNthCalledWith(1,{id:user.id,roles:user.roles},{expiresIn: '1h'})
-            expect(jwtService.signAsync).toHaveBeenNthCalledWith(2,{id:user.id,roles:user.roles},{expiresIn: '7d'})
+            expect(jwtService.signAsync).toHaveBeenNthCalledWith(1,userPayload,{expiresIn: '1h'})
+            expect(jwtService.signAsync).toHaveBeenNthCalledWith(2,userPayload,{expiresIn: '7d'})
             expect(jwtService.signAsync).toHaveBeenCalledTimes(2)
         })
     })
