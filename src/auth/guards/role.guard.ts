@@ -25,6 +25,7 @@ export class RoleGuard implements CanActivate {
         if (!roles.length) return true
 
         const isRight = roles.some(role => request.user.roles?.includes(role))
+
         if (!isRight) {
             throw new ForbiddenException(
                 `Недостаточно прав. Пожалуйста, обратитесь в тех поддержку.`,

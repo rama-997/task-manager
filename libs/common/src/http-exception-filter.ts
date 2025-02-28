@@ -9,7 +9,7 @@ import {
 import { Response } from 'express'
 
 @Catch(UnauthorizedException, InternalServerErrorException)
-export class MultiExceptionFilter implements ExceptionFilter {
+export class HttpExceptionFilter implements ExceptionFilter {
     catch(exception: HttpException, host: ArgumentsHost) {
         const ctx = host.switchToHttp()
         const response = ctx.getResponse<Response>()

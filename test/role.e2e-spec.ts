@@ -7,10 +7,14 @@ import { Repository } from 'typeorm'
 import { Role } from '@src/role/entities'
 import { getRepositoryToken } from '@nestjs/typeorm'
 import { HttpExceptionFilter } from '@libs/common'
+import { TokenService } from '@src/token/token.service'
+import { createRoleDtoMock } from '@src/role/mocks'
+import { ERoles } from '@src/role/types'
 
 describe('AppController (e2e)', () => {
     let app: INestApplication<App>
     let roleRepo: Repository<Role>
+    let tokenService: TokenService
 
     beforeAll(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -22,9 +26,11 @@ describe('AppController (e2e)', () => {
 
         app = moduleFixture.createNestApplication()
         app.useGlobalFilters(new HttpExceptionFilter())
-        app.useGlobalPipes(new ValidationPipe({transform: true}))
+        app.useGlobalPipes(new ValidationPipe({ transform: true }))
 
-        roleRepo=moduleFixture.get<Repository<Role>>(getRepositoryToken(Role))
+        roleRepo = moduleFixture.get<Repository<Role>>(getRepositoryToken(Role))
+        tokenService = moduleFixture.get<TokenService>(TokenService)
+
         await app.init()
     })
 
@@ -36,13 +42,24 @@ describe('AppController (e2e)', () => {
         await app.close()
     })
 
-    describe('POST /role', () => {
-        it('OK', async() => {
-            return request(app.getHttpServer())
-                .post('/role')
-                // .auth()
-                // .expect(HttpStatus.OK)
-                // .expect()
+    it('POST /role', async () => {
+        const { accessToken } = await tokenService.authTokens({
+            id: '550e8400-e29b-41d4-a716-446655440000',
+            roles: [ERoles.ADMIN],
         })
+        return request(app.getHttpServer())
+            .post('/role')
+            .auth(accessToken, { type: 'bearer' })
+            .send(createRoleDtoMock)
+            .then(res => {
+                if (res.error) throw { ...res.error }
+                const result = res.body as Role
+
+                expect(res.statusCode).toBe(HttpStatus.CREATED)
+                expect(result.id).toBeDefined()
+                expect(result).toEqual(
+                    expect.objectContaining(createRoleDtoMock),
+                )
+            })
     })
 })
