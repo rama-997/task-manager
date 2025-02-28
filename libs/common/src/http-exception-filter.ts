@@ -2,33 +2,30 @@ import {
     ExceptionFilter,
     Catch,
     ArgumentsHost,
-    HttpException, HttpStatus,
+    UnauthorizedException,
+    InternalServerErrorException,
+    HttpException,
 } from '@nestjs/common'
-import { Request, Response } from 'express'
+import { Response } from 'express'
 
-@Catch(HttpException)
-export class HttpExceptionFilter implements ExceptionFilter {
+@Catch(UnauthorizedException, InternalServerErrorException)
+export class MultiExceptionFilter implements ExceptionFilter {
     catch(exception: HttpException, host: ArgumentsHost) {
         const ctx = host.switchToHttp()
         const response = ctx.getResponse<Response>()
-        const request = ctx.getRequest<Request>()
         const status = exception.getStatus()
 
-        if(status===HttpStatus.UNAUTHORIZED) {
-            response.status(status).json({
-                statusCode: status,
-                timestamp: new Date().toISOString(),
-                path: request.url,
-                message:'Пользователь не авторизован. Пожалуйста, авторизуйтесь.',
-            })
+        let message = 'Произошла ошибка' // Сообщение по умолчанию
+
+        if (exception instanceof UnauthorizedException) {
+            message = 'Доступ запрещен. Требуется авторизация.'
+        } else if (exception instanceof InternalServerErrorException) {
+            message = 'Внутренняя ошибка сервера. Попробуйте позже.'
         }
-        if(status===HttpStatus.INTERNAL_SERVER_ERROR) {
-            response.status(status).json({
-                statusCode: status,
-                timestamp: new Date().toISOString(),
-                path: request.url,
-                message:'Упс, что-то пошло не так.',
-            })
-        }
+
+        response.status(status).json({
+            statusCode: status,
+            message,
+        })
     }
 }
