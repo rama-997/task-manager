@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common'
+import { Body, Controller, Get, Param, Post } from '@nestjs/common'
 import { RoleService } from './role.service'
 import { Role } from '@src/role/entities'
 import { CreateRoleDto } from '@src/role/dto'
@@ -13,5 +13,10 @@ export class RoleController {
     @Post()
     async create(@Body() createRoleDto: CreateRoleDto): Promise<Role> {
         return this.roleService.create(createRoleDto)
+    }
+
+    @Get(':id')
+    async finOne(@Param('id') id: string): Promise<Role> {
+        return this.roleService.findOne(id)
     }
 }

@@ -10,6 +10,8 @@ import { HttpExceptionFilter } from '@libs/common'
 import { TokenService } from '@src/token/token.service'
 import { createRoleDtoMock } from '@src/role/mocks'
 import { ERoles } from '@src/role/types'
+import { userPayloadMock } from '@src/token/mocks'
+import { UserPayload } from '@src/token/types'
 
 describe('AppController (e2e)', () => {
     let app: INestApplication<App>
@@ -43,10 +45,7 @@ describe('AppController (e2e)', () => {
     })
 
     it('POST /role', async () => {
-        const { accessToken } = await tokenService.authTokens({
-            id: '550e8400-e29b-41d4-a716-446655440000',
-            roles: [ERoles.ADMIN],
-        })
+        const { accessToken } = await tokenService.authTokens(userPayloadMock as UserPayload)
         return request(app.getHttpServer())
             .post('/role')
             .auth(accessToken, { type: 'bearer' })
@@ -60,6 +59,21 @@ describe('AppController (e2e)', () => {
                 expect(result).toEqual(
                     expect.objectContaining(createRoleDtoMock),
                 )
+            })
+    })
+
+    it('GET /role/:id', async () => {
+        const role=await roleRepo.save(createRoleDtoMock)
+        const { accessToken } = await tokenService.authTokens(userPayloadMock as UserPayload)
+        return request(app.getHttpServer())
+        .get(`/role/${role.id}`)
+            .auth(accessToken, { type: 'bearer' })
+            .then(res => {
+                if(res.error) throw { ...res.error }
+                const result=res.body as Role
+
+                expect(result).toEqual(expect.objectContaining(role))
+                expect(result.id).toBe(role.id)
             })
     })
 })
