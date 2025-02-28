@@ -1,8 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
+import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Role } from '@src/role/entities'
 import { Repository } from 'typeorm'
-import { CreateRoleDto } from '@src/role/dto'
+import { CreateRoleDto, UpdateRoleDto } from '@src/role/dto'
 
 @Injectable()
 export class RoleService {
@@ -24,5 +24,14 @@ export class RoleService {
             throw new NotFoundException('Нет роли')
         }
         return role
+    }
+
+    async update(id:string, updateRoleDto:UpdateRoleDto):Promise<Role>{
+        let role=await this.roleRepo.findOneBy({id})
+        if(!role){
+            throw new NotFoundException('Нет роли')
+        }
+        return this.roleRepo.save(Object.assign(role,updateRoleDto))
+
     }
 }
