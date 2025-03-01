@@ -8,7 +8,7 @@ import { Role } from '@src/role/entities'
 import { getRepositoryToken } from '@nestjs/typeorm'
 import { HttpExceptionFilter } from '@libs/common'
 import { TokenService } from '@src/token/token.service'
-import { createRoleDtoMock, updateRoleDtoMock } from '@src/role/mocks'
+import { createRoleDtoMock, roleMock, updateRoleDtoMock } from '@src/role/mocks'
 import { userPayloadMock } from '@src/token/mocks'
 import { AuthTokens, UserPayload } from '@src/token/types'
 import { ERoles } from '@src/role/types'
@@ -81,24 +81,70 @@ describe('AppController (e2e)', () => {
             })
     })
 
-    it('PATCH /role/:id', async () => {
-        const role = await roleRepo.save(createRoleDtoMock)
-        const { accessToken } = await tokenService.authTokens(
-            userPayloadMock as UserPayload,
-        )
-        return request(app.getHttpServer())
-            .patch(`/role/${role.id}`)
-            .auth(accessToken, { type: 'bearer' })
-            .send(updateRoleDtoMock)
-            .then(res => {
-                if (res.error) throw { ...res.error }
-                const result = res.body as Role
+    describe('PATCH /role/:id',()=>{
+        let role: Role
+        let authTokens: AuthTokens
 
-                expect(result).toEqual(
-                    expect.objectContaining(updateRoleDtoMock),
-                )
-                expect(result.id).toBe(role.id)
-            })
+        beforeEach(async () => {
+            role = await roleRepo.save(createRoleDtoMock)
+            authTokens = await tokenService.authTokens(
+                userPayloadMock as UserPayload,
+            )
+        })
+
+        it('OK', async () => {
+            return request(app.getHttpServer())
+                .patch(`/role/${role.id}`)
+                .auth(authTokens.accessToken, { type: 'bearer' })
+                .send(updateRoleDtoMock)
+                .then(res => {
+                    if (res.error) throw { ...res.error }
+                    const result = res.body as Role
+
+                    expect(result).toEqual(
+                        expect.objectContaining(updateRoleDtoMock),
+                    )
+                    expect(result.id).toBe(role.id)
+                })
+        })
+
+        it('BAD_REQUEST on param id', async () => {
+            return request(app.getHttpServer())
+                .patch(`/role/123`)
+                .auth(authTokens.accessToken, { type: 'bearer' })
+                .send(updateRoleDtoMock)
+                .expect(HttpStatus.BAD_REQUEST)
+        })
+
+        it('BAD_REQUEST on dto', async () => {
+            return request(app.getHttpServer())
+                .patch(`/role/${role.id}`)
+                .auth(authTokens.accessToken, { type: 'bearer' })
+                .send({value:'some value'})
+                .expect(HttpStatus.BAD_REQUEST)
+        })
+
+        it('NOT_FOUND', async () => {
+            return request(app.getHttpServer())
+                .patch(`/role/${roleMock.id}`)
+                .auth(authTokens.accessToken, { type: 'bearer' })
+                .send(updateRoleDtoMock)
+                .expect(HttpStatus.BAD_REQUEST)
+        })
+
+        it('FORBIDDEN', async () => {
+            const {accessToken:forbiddenToken} = await tokenService.authTokens({
+                ...userPayloadMock,
+                roles: [ERoles.USER],
+            } as UserPayload)
+
+            return request(app.getHttpServer())
+                .patch(`/role/${role.id}`)
+                .auth(forbiddenToken, { type: 'bearer' })
+                .send(updateRoleDtoMock)
+                .expect(HttpStatus.FORBIDDEN)
+        })
+
     })
 
     describe('DELETE /role/:id', () => {
