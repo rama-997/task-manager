@@ -64,21 +64,44 @@ describe('AppController (e2e)', () => {
             })
     })
 
-    it('GET /role/:id', async () => {
-        const role = await roleRepo.save(createRoleDtoMock)
-        const { accessToken } = await tokenService.authTokens(
-            userPayloadMock as UserPayload,
-        )
-        return request(app.getHttpServer())
-            .get(`/role/${role.id}`)
-            .auth(accessToken, { type: 'bearer' })
-            .then(res => {
-                if (res.error) throw { ...res.error }
-                const result = res.body as Role
+    describe('GET /role/:id', () => {
+        let role: Role
+        let authTokens: AuthTokens
 
-                expect(result).toEqual(expect.objectContaining(role))
-                expect(result.id).toBe(role.id)
-            })
+        beforeEach(async () => {
+            role = await roleRepo.save(createRoleDtoMock)
+            authTokens = await tokenService.authTokens(
+                userPayloadMock as UserPayload,
+            )
+        })
+
+        it('OK', async () => {
+            return request(app.getHttpServer())
+                .get(`/role/${role.id}`)
+                .auth(authTokens.accessToken, { type: 'bearer' })
+                .then(res => {
+                    if (res.error) throw { ...res.error }
+                    const result = res.body as Role
+
+                    expect(result).toEqual(expect.objectContaining(role))
+                    expect(result.id).toBe(role.id)
+                })
+        })
+
+        it('BAD_REQUEST', async () => {
+            return request(app.getHttpServer())
+                .get(`/role/123`)
+                .auth(authTokens.accessToken, { type: 'bearer' })
+                .expect(HttpStatus.BAD_REQUEST)
+        })
+
+        it('NOT_FOUND', async () => {
+            await roleRepo.delete(role.id)
+            return request(app.getHttpServer())
+                .get(`/role/${role.id}`)
+                .auth(authTokens.accessToken, { type: 'bearer' })
+                .expect(HttpStatus.NOT_FOUND)
+        })
     })
 
     describe('PATCH /role/:id',()=>{
