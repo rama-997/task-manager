@@ -1,9 +1,10 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common'
 import { RoleService } from './role.service'
 import { Role } from '@src/role/entities'
 import { CreateRoleDto, UpdateRoleDto } from '@src/role/dto'
 import { AuthDecorator } from '@libs/decorators'
 import { ERoles } from '@src/role/types'
+import { parseUUIDConfig } from '@libs/configs'
 
 @Controller('role')
 @AuthDecorator(ERoles.ADMIN)
@@ -16,12 +17,17 @@ export class RoleController {
     }
 
     @Get(':id')
-    async finOne(@Param('id') id: string): Promise<Role> {
+    async finOne(@Param('id',new ParseUUIDPipe(parseUUIDConfig)) id: string): Promise<Role> {
         return this.roleService.findOne(id)
     }
 
     @Patch(':id')
-    async update(@Param('id', new ParseUUIDPipe()) id:string,@Body() updateRoleDto:UpdateRoleDto):Promise<Role>{
+    async update(@Param('id', new ParseUUIDPipe(parseUUIDConfig)) id:string,@Body() updateRoleDto:UpdateRoleDto):Promise<Role>{
         return this.roleService.update(id, updateRoleDto)
+    }
+
+    @Delete(':id')
+    async delete(@Param('id', new ParseUUIDPipe(parseUUIDConfig)) id: string): Promise<Role> {
+        return this.roleService.delete(id)
     }
 }

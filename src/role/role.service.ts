@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Role } from '@src/role/entities'
 import { Repository } from 'typeorm'
@@ -33,5 +33,9 @@ export class RoleService {
         }
         return this.roleRepo.save(Object.assign(role,updateRoleDto))
 
+    }
+
+    async delete(id:string):Promise<Role>{
+        return this.roleRepo.delete(id).then(res=>res.raw)
     }
 }

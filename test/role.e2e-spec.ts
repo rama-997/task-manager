@@ -10,7 +10,8 @@ import { HttpExceptionFilter } from '@libs/common'
 import { TokenService } from '@src/token/token.service'
 import { createRoleDtoMock, updateRoleDtoMock } from '@src/role/mocks'
 import { userPayloadMock } from '@src/token/mocks'
-import { UserPayload } from '@src/token/types'
+import { AuthTokens, UserPayload } from '@src/token/types'
+import { ERoles } from '@src/role/types'
 
 describe('AppController (e2e)', () => {
     let app: INestApplication<App>
@@ -44,7 +45,9 @@ describe('AppController (e2e)', () => {
     })
 
     it('POST /role', async () => {
-        const { accessToken } = await tokenService.authTokens(userPayloadMock as UserPayload)
+        const { accessToken } = await tokenService.authTokens(
+            userPayloadMock as UserPayload,
+        )
         return request(app.getHttpServer())
             .post('/role')
             .auth(accessToken, { type: 'bearer' })
@@ -62,14 +65,16 @@ describe('AppController (e2e)', () => {
     })
 
     it('GET /role/:id', async () => {
-        const role=await roleRepo.save(createRoleDtoMock)
-        const { accessToken } = await tokenService.authTokens(userPayloadMock as UserPayload)
+        const role = await roleRepo.save(createRoleDtoMock)
+        const { accessToken } = await tokenService.authTokens(
+            userPayloadMock as UserPayload,
+        )
         return request(app.getHttpServer())
-        .get(`/role/${role.id}`)
+            .get(`/role/${role.id}`)
             .auth(accessToken, { type: 'bearer' })
             .then(res => {
-                if(res.error) throw { ...res.error }
-                const result=res.body as Role
+                if (res.error) throw { ...res.error }
+                const result = res.body as Role
 
                 expect(result).toEqual(expect.objectContaining(role))
                 expect(result.id).toBe(role.id)
@@ -77,19 +82,74 @@ describe('AppController (e2e)', () => {
     })
 
     it('PATCH /role/:id', async () => {
-        const role=await roleRepo.save(createRoleDtoMock)
-        const { accessToken } = await tokenService.authTokens(userPayloadMock as UserPayload)
+        const role = await roleRepo.save(createRoleDtoMock)
+        const { accessToken } = await tokenService.authTokens(
+            userPayloadMock as UserPayload,
+        )
         return request(app.getHttpServer())
             .patch(`/role/${role.id}`)
             .auth(accessToken, { type: 'bearer' })
             .send(updateRoleDtoMock)
             .then(res => {
-                if(res.error) throw { ...res.error }
-                const result=res.body as Role
+                if (res.error) throw { ...res.error }
+                const result = res.body as Role
 
-                expect(result).toEqual(expect.objectContaining(updateRoleDtoMock))
+                expect(result).toEqual(
+                    expect.objectContaining(updateRoleDtoMock),
+                )
                 expect(result.id).toBe(role.id)
             })
     })
 
+    describe('DELETE /role/:id', () => {
+        let role: Role
+        let authTokens: AuthTokens
+
+        beforeEach(async () => {
+            role = await roleRepo.save(createRoleDtoMock)
+            authTokens = await tokenService.authTokens(
+                userPayloadMock as UserPayload,
+            )
+        })
+
+        it('OK', async () => {
+            return request(app.getHttpServer())
+                .delete(`/role/${role.id}`)
+                .auth(authTokens.accessToken, { type: 'bearer' })
+                .then(async res => {
+                    if (res.error) throw { ...res.error }
+                    const deletedRole = await roleRepo.findOneBy({
+                        id: role.id,
+                    })
+
+                    expect(res.statusCode).toBe(HttpStatus.OK)
+                    expect(deletedRole).toBe(null)
+                })
+        })
+
+        it('BAD REQUEST', async () => {
+            return request(app.getHttpServer())
+                .delete(`/role/123`)
+                .auth(authTokens.accessToken, { type: 'bearer' })
+                .expect(HttpStatus.BAD_REQUEST)
+        })
+
+        it('UNAUTHORIZED', async () => {
+            return request(app.getHttpServer())
+                .delete(`/role/${role.id}`)
+                .expect(HttpStatus.UNAUTHORIZED)
+        })
+
+        it('FORBIDDEN', async () => {
+            const {accessToken:forbiddenToken} = await tokenService.authTokens({
+                ...userPayloadMock,
+                roles: [ERoles.USER],
+            } as UserPayload)
+
+            return request(app.getHttpServer())
+                .delete(`/role/${role.id}`)
+                .auth(forbiddenToken, { type: 'bearer' })
+                .expect(HttpStatus.FORBIDDEN)
+        })
+    })
 })
