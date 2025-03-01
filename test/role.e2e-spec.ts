@@ -44,24 +44,49 @@ describe('AppController (e2e)', () => {
         await app.close()
     })
 
-    it('POST /role', async () => {
-        const { accessToken } = await tokenService.authTokens(
-            userPayloadMock as UserPayload,
-        )
-        return request(app.getHttpServer())
-            .post('/role')
-            .auth(accessToken, { type: 'bearer' })
-            .send(createRoleDtoMock)
-            .then(res => {
-                if (res.error) throw { ...res.error }
-                const result = res.body as Role
+    describe('POST /role',()=>{
+        let authToken: AuthTokens
 
-                expect(res.statusCode).toBe(HttpStatus.CREATED)
-                expect(result.id).toBeDefined()
-                expect(result).toEqual(
-                    expect.objectContaining(createRoleDtoMock),
-                )
-            })
+        beforeEach(async ()=>{
+            authToken = await tokenService.authTokens(
+                userPayloadMock as UserPayload,
+            )
+        })
+
+        it('CREATED', async () => {
+            return request(app.getHttpServer())
+                .post('/role')
+                .auth(authToken.accessToken, { type: 'bearer' })
+                .send(createRoleDtoMock)
+                .then(res => {
+                    if (res.error) throw { ...res.error }
+                    const result = res.body as Role
+
+                    expect(res.statusCode).toBe(HttpStatus.CREATED)
+                    expect(result.id).toBeDefined()
+                    expect(result).toEqual(
+                        expect.objectContaining(createRoleDtoMock),
+                    )
+                })
+        })
+
+        it('BAD_REQUEST', async () => {
+            return request(app.getHttpServer())
+                .post('/role')
+                .auth(authToken.accessToken, { type: 'bearer' })
+                .send({value:'bad value'})
+                .expect(HttpStatus.BAD_REQUEST)
+        })
+
+        it('CONFLICT', async () => {
+            await roleRepo.save(createRoleDtoMock)
+            return request(app.getHttpServer())
+                .post('/role')
+                .auth(authToken.accessToken, { type: 'bearer' })
+                .send(createRoleDtoMock)
+                .expect(HttpStatus.CONFLICT)
+        })
+
     })
 
     describe('GET /role/:id', () => {
