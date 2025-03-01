@@ -1,9 +1,9 @@
 import {
-    Column,
+    Column, CreateDateColumn,
     Entity,
     JoinTable,
     ManyToMany,
-    PrimaryGeneratedColumn,
+    PrimaryGeneratedColumn, UpdateDateColumn,
 } from 'typeorm'
 import { Role } from '@src/role/entities'
 
@@ -22,10 +22,13 @@ export class User {
     password: string
 
     @Column()
-    name: string
+    name?: string
 
     @Column({ nullable: true })
-    photo: string
+    photo?: string
+
+    @Column({default: false,name:'is_confirm'})
+    isConfirm?: boolean
 
     @ManyToMany(() => Role, role => role.users)
     @JoinTable({
@@ -39,5 +42,11 @@ export class User {
             referencedColumnName:'id'
         }
     })
-    roles: Role[]
+    readonly roles: Role[]
+
+    @CreateDateColumn({ name: 'created_at' })
+    readonly createdAt: Date
+
+    @UpdateDateColumn({ name: 'updated_at' })
+    readonly updatedAt: Date
 }
