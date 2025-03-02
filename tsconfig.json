@@ -18,6 +18,7 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "resolveJsonModule": true,
+    "jsx": "react",
     "paths": {
       "@libs/common": [
         "libs/common/src"
@@ -61,11 +62,11 @@
       "@src/token/*": [
         "src/token/*"
       ],
-      "@src/user": [
-        "src/user"
+      "@src/mail": [
+        "src/mail"
       ],
-      "@src/user/*": [
-        "src/user/*"
+      "@src/mail/*": [
+        "src/mail/*"
       ]
     }
   }

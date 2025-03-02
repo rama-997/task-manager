@@ -1,4 +1,4 @@
-import { User } from '@src/user/entities'
+import { User } from '@src/auth/entities'
 
 export const userMock: Partial<User> = {
     email: 'email@email.com',

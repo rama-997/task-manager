@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { TokenService } from './token.service'
 import { JwtService } from '@nestjs/jwt'
-import { User } from '@src/user/entities'
-import { userMock } from '@src/user/mocks/user.mock'
+import { User } from 'src/auth/entities'
+import { userMock } from '@src/auth/mocks/user.mock'
 import { UserPayload } from '@src/token/types'
 import { userPayloadMock } from '@src/token/mocks'
 
