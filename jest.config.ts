@@ -2,11 +2,12 @@ import { JestConfigWithTsJest, pathsToModuleNameMapper } from 'ts-jest'
 import { compilerOptions } from './tsconfig.json'
 
 const jestConfig: JestConfigWithTsJest = {
-    moduleFileExtensions: ['js', 'json', 'ts'],
+    moduleFileExtensions: ['js', 'json', 'ts','tsx'],
     rootDir: '.',
     testRegex: '.*\\.spec\\.ts$',
     transform: {
         '^.+\\.(t|j)s$': 'ts-jest',
+        '^.+\\.tsx$': 'ts-jest',
     },
     collectCoverageFrom: ['**/*.(t|j)s'],
     coverageDirectory: './coverage',
