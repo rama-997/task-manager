@@ -1,8 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { TokenService } from './token.service'
 import { JwtService } from '@nestjs/jwt'
-import { User } from 'src/auth/entities'
-import { userMock } from '@src/auth/mocks/user.mock'
 import { UserPayload } from '@src/token/types'
 import { userPayloadMock } from '@src/token/mocks'
 
@@ -34,8 +32,8 @@ describe('TokenService', () => {
 
             expect(res.accessToken).toBeDefined()
             expect(res.refreshToken).toBeDefined()
-            expect(jwtService.signAsync).toHaveBeenNthCalledWith(1,userPayload,{expiresIn: '1h'})
-            expect(jwtService.signAsync).toHaveBeenNthCalledWith(2,userPayload,{expiresIn: '7d'})
+            expect(jwtService.signAsync).toHaveBeenNthCalledWith(1,userPayload,expect.objectContaining({expiresIn: '1h'}))
+            expect(jwtService.signAsync).toHaveBeenNthCalledWith(2,userPayload,expect.objectContaining({expiresIn: '7d'}))
             expect(jwtService.signAsync).toHaveBeenCalledTimes(2)
         })
     })
