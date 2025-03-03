@@ -8,6 +8,6 @@ export class AuthController {
 
     @Post('signup')
     async signUp(@Body() signUpDto:SignUpDto):Promise<{message:string}>{
-
+        return this.authService.signUp(signUpDto)
     }
 }
