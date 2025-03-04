@@ -3,12 +3,16 @@ import { JwtService } from '@nestjs/jwt'
 import { AuthTokens, UserPayload } from '@src/token/types'
 import { ConfigService } from '@nestjs/config'
 import { User } from '@src/auth/entities'
+import { Token } from '@src/token/entities'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Repository } from 'typeorm'
 
 @Injectable()
 export class TokenService {
     constructor(
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
+        @InjectRepository(Token) private readonly tokenRepository:Repository<Token>
     ){}
 
     toUserPayload(user:User):UserPayload{
@@ -37,5 +41,15 @@ export class TokenService {
             secret: this.configService.getOrThrow<string>('JWT_EMAIL_SECRET'),
             expiresIn:'1h'
         })
+    }
+
+    async updateAuthToken(refreshToken:string,agent:string,user:User){
+        const token=await this.tokenRepository.findOneBy({refreshToken,userAgent:agent})
+        if(token){
+            token.refreshToken=refreshToken
+            await this.tokenRepository.save(token)
+        }else{
+            await this.tokenRepository.save({refreshToken,userAgent:agent,users:[user]})
+        }
     }
 }

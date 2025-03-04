@@ -10,7 +10,7 @@ import { User } from '@src/auth/entities'
 @Entity()
 export class Token {
     @PrimaryGeneratedColumn('uuid')
-    readonly id: string
+    readonly id?: string
 
     @Column({ name: 'refresh_token' })
     refreshToken: string
@@ -24,5 +24,5 @@ export class Token {
         joinColumn: { name: 'token_id', referencedColumnName: 'id' },
         inverseJoinColumn: { name: 'user_id', referencedColumnName: 'id' },
     })
-    readonly users: User[]
+    readonly users?: User[]
 }
