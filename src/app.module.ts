@@ -3,10 +3,9 @@ import { RoleModule } from './role/role.module'
 import { ConfigModule } from '@nestjs/config'
 import { configOption, typeormOption } from '@libs/options'
 import { TypeOrmModule } from '@nestjs/typeorm'
-import { AuthModule } from './auth/auth.module';
-import { TokenModule } from './token/token.module';
-import { UserModule } from './user/user.module';
-import { MailModule } from './mail/mail.module';
+import { AuthModule } from './auth/auth.module'
+import { TokenModule } from './token/token.module'
+import { MailModule } from './mail/mail.module'
 
 @Module({
     imports: [
@@ -15,7 +14,6 @@ import { MailModule } from './mail/mail.module';
         RoleModule,
         AuthModule,
         TokenModule,
-        UserModule,
         MailModule,
     ],
 })
