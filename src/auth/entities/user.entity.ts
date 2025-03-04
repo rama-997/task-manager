@@ -6,6 +6,7 @@ import {
     PrimaryGeneratedColumn, UpdateDateColumn,
 } from 'typeorm'
 import { Role } from '@src/role/entities'
+import { Token } from '@src/token/entities'
 
 @Entity()
 export class User {
@@ -43,6 +44,9 @@ export class User {
         }
     })
     readonly roles: Role[]
+
+    @ManyToMany(()=>Token,token=>token.users)
+    readonly tokens: Token[]
 
     @CreateDateColumn({ name: 'created_at' })
     readonly createdAt: Date
