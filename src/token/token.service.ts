@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { AuthTokens, UserPayload } from '@src/token/types'
 import { ConfigService } from '@nestjs/config'
+import { User } from '@src/auth/entities'
 
 @Injectable()
 export class TokenService {
@@ -9,6 +10,14 @@ export class TokenService {
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
     ){}
+
+    toUserPayload(user:User):UserPayload{
+        const roles=user.roles.map(role=>role.value)
+        return {
+            id:user.id,
+            roles
+        }
+    }
 
     async authTokens(userPayload: UserPayload): Promise<AuthTokens> {
         const accessToken = await this.jwtService.signAsync(userPayload, {
