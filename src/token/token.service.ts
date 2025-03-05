@@ -52,4 +52,11 @@ export class TokenService {
             await this.tokenRepository.save({refreshToken,userAgent:agent,users:[user]})
         }
     }
+
+    async authorization(user:User,refreshToken:string,agent:string):Promise<AuthTokens>{
+        const payload=this.toUserPayload(user)
+        const tokens=await this.authTokens(payload)
+        await this.updateAuthToken(refreshToken,agent,user)
+        return tokens
+    }
 }
