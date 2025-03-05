@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
+import {
+    ConflictException,
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common'
 import { SignInDto, SignUpDto } from '@src/auth/dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { User } from '@src/auth/entities'
@@ -7,6 +11,8 @@ import { compare, hash } from 'bcryptjs'
 import { MailService } from '@src/mail/mail.service'
 import { TokenService } from '@src/token/token.service'
 import { AuthTokens } from '@src/token/types'
+import { RoleService } from '@src/role/role.service'
+import { ERoles } from '@src/role/types'
 
 @Injectable()
 export class AuthService {
@@ -15,6 +21,7 @@ export class AuthService {
         private readonly userRepository: Repository<User>,
         private readonly mailService: MailService,
         private readonly tokenService: TokenService,
+        private readonly roleService: RoleService,
     ) {}
 
     async signUp(signUpDto: SignUpDto): Promise<{ message: string }> {
@@ -31,27 +38,29 @@ export class AuthService {
             throw new ConflictException('Такой логин уже занят')
         }
         const hashedPass = await hash(signUpDto.password, 3)
+        const role = await this.roleService.findOne(ERoles.USER)
         const user = await this.userRepository.save({
             ...signUpDto,
             password: hashedPass,
+            roles: [role],
         })
         const emailToken = await this.tokenService.emailToken(user.id)
         await this.mailService.signUpMail(emailToken, signUpDto.email)
         return { message: 'Было отправлено письмо на вашу электронную почту' }
     }
 
-    async signIn(signInDto: SignInDto,agent:string): Promise<AuthTokens> {
+    async signIn(signInDto: SignInDto, agent: string): Promise<AuthTokens> {
         const user = await this.userRepository.findOneBy([
             { login: signInDto.loginOrEmail },
             { email: signInDto.loginOrEmail },
         ])
-        if(!user) {
+        if (!user) {
             throw new NotFoundException('Неправильный логин или e-mail')
         }
-        const isCorrectPass=await compare(signInDto.password,user.password)
-        if(!isCorrectPass) {
+        const isCorrectPass = await compare(signInDto.password, user.password)
+        if (!isCorrectPass) {
             throw new ConflictException('Неверный пароль')
         }
-        return this.tokenService.authorization(user,agent)
+        return this.tokenService.authorization(user, agent)
     }
 }
