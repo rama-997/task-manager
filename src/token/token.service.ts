@@ -53,10 +53,10 @@ export class TokenService {
         }
     }
 
-    async authorization(user:User,refreshToken:string,agent:string):Promise<AuthTokens>{
+    async authorization(user:User,agent:string):Promise<AuthTokens>{
         const payload=this.toUserPayload(user)
         const tokens=await this.authTokens(payload)
-        await this.updateAuthToken(refreshToken,agent,user)
+        await this.updateAuthToken(tokens.refreshToken,agent,user)
         return tokens
     }
 }

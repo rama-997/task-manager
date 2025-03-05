@@ -6,13 +6,16 @@ import { getRepositoryToken } from '@nestjs/typeorm'
 import { User } from '@src/auth/entities'
 import { Repository } from 'typeorm'
 import * as bcryptjs from 'bcryptjs'
-import { signUpDtoMock, userMock } from '@src/auth/mocks'
-import { SignUpDto } from '@src/auth/dto'
-import { ConflictException } from '@nestjs/common'
+import { authTokensMock, signUpDtoMock, userMock } from '@src/auth/mocks'
+import { SignInDto, SignUpDto } from '@src/auth/dto'
+import { ConflictException, NotFoundException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
 import { MailerService } from '@nestjs-modules/mailer'
 import { mailerMock } from '@src/mail/module-options/mocks'
+import { configServiceMock } from '@libs/common'
+import { Token } from '@src/token/entities'
+import { AuthTokens } from '@src/token/types'
 
 describe('AuthService', () => {
     let service: AuthService
@@ -30,9 +33,13 @@ describe('AuthService', () => {
                     provide: getRepositoryToken(User),
                     useClass: Repository,
                 },
+                {
+                    provide: getRepositoryToken(Token),
+                    useClass: Repository,
+                },
                 JwtService,
-                ConfigService,
-                {provide:MailerService,useFactory:mailerMock}
+                { provide: ConfigService, useFactory: configServiceMock },
+                { provide: MailerService, useFactory: mailerMock },
             ],
         }).compile()
         jest.clearAllMocks()
@@ -47,13 +54,13 @@ describe('AuthService', () => {
         let hashedPass: string
         let user: Partial<User>
         let signUpDto: Partial<SignUpDto>
-        let emailToken:string
+        let emailToken: string
 
         beforeEach(() => {
             hashedPass = 'hashedPassword'
             user = userMock
             signUpDto = signUpDtoMock
-            emailToken='emailToken'
+            emailToken = 'emailToken'
         })
 
         it('should be signed up', async () => {
@@ -64,32 +71,50 @@ describe('AuthService', () => {
                 ...signUpDto,
                 password: hashedPass,
             } as User)
-            jest.spyOn(tokenService,'emailToken').mockResolvedValueOnce(emailToken)
-            jest.spyOn(mailService,'signUpMail').mockResolvedValueOnce()
+            jest.spyOn(tokenService, 'emailToken').mockResolvedValueOnce(
+                emailToken,
+            )
+            jest.spyOn(mailService, 'signUpMail').mockResolvedValueOnce()
 
-            const result=await service.signUp(signUpDto as SignUpDto)
+            const result = await service.signUp(signUpDto as SignUpDto)
 
-            expect(result).toEqual({message:expect.any(String)})
+            expect(result).toEqual({ message: expect.any(String) })
             expect(userRepository.findOneBy).toHaveBeenCalledTimes(2)
-            expect(userRepository.findOneBy).toHaveBeenNthCalledWith(1,{email:signUpDto.email})
-            expect(userRepository.findOneBy).toHaveBeenNthCalledWith(2,{login:signUpDto.login})
-            expect(bcryptjs.hash).toHaveBeenCalledWith(signUpDto.password,3)
-            expect(userRepository.save).toHaveBeenCalledWith({...signUpDto, password: hashedPass})
+            expect(userRepository.findOneBy).toHaveBeenNthCalledWith(1, {
+                email: signUpDto.email,
+            })
+            expect(userRepository.findOneBy).toHaveBeenNthCalledWith(2, {
+                login: signUpDto.login,
+            })
+            expect(bcryptjs.hash).toHaveBeenCalledWith(signUpDto.password, 3)
+            expect(userRepository.save).toHaveBeenCalledWith({
+                ...signUpDto,
+                password: hashedPass,
+            })
             expect(tokenService.emailToken).toHaveBeenCalledWith(user.id)
-            expect(mailService.signUpMail).toHaveBeenCalledWith(emailToken,signUpDto.email)
+            expect(mailService.signUpMail).toHaveBeenCalledWith(
+                emailToken,
+                signUpDto.email,
+            )
         })
 
         it('exist e-mail', async () => {
-            jest.spyOn(userRepository, 'findOneBy').mockResolvedValue(user as User)
+            jest.spyOn(userRepository, 'findOneBy').mockResolvedValue(
+                user as User,
+            )
             jest.spyOn(bcryptjs, 'hash')
             jest.spyOn(userRepository, 'save')
-            jest.spyOn(tokenService,'emailToken')
-            jest.spyOn(mailService,'signUpMail')
+            jest.spyOn(tokenService, 'emailToken')
+            jest.spyOn(mailService, 'signUpMail')
 
-            await expect(service.signUp(signUpDto as SignUpDto)).rejects.toThrow(ConflictException)
+            await expect(
+                service.signUp(signUpDto as SignUpDto),
+            ).rejects.toThrow(ConflictException)
 
             expect(userRepository.findOneBy).toHaveBeenCalledTimes(1)
-            expect(userRepository.findOneBy).toHaveBeenNthCalledWith(1,{email:signUpDto.email})
+            expect(userRepository.findOneBy).toHaveBeenNthCalledWith(1, {
+                email: signUpDto.email,
+            })
             expect(bcryptjs.hash).not.toHaveBeenCalled()
             expect(userRepository.save).not.toHaveBeenCalled()
             expect(tokenService.emailToken).not.toHaveBeenCalled()
@@ -97,21 +122,91 @@ describe('AuthService', () => {
         })
 
         it('exist login', async () => {
-            jest.spyOn(userRepository, 'findOneBy').mockResolvedValueOnce(null).mockResolvedValueOnce(user as User)
+            jest.spyOn(userRepository, 'findOneBy')
+                .mockResolvedValueOnce(null)
+                .mockResolvedValueOnce(user as User)
             jest.spyOn(bcryptjs, 'hash')
             jest.spyOn(userRepository, 'save')
-            jest.spyOn(tokenService,'emailToken')
-            jest.spyOn(mailService,'signUpMail')
+            jest.spyOn(tokenService, 'emailToken')
+            jest.spyOn(mailService, 'signUpMail')
 
-            await expect(service.signUp(signUpDto as SignUpDto)).rejects.toThrow(ConflictException)
+            await expect(
+                service.signUp(signUpDto as SignUpDto),
+            ).rejects.toThrow(ConflictException)
 
             expect(userRepository.findOneBy).toHaveBeenCalledTimes(2)
-            expect(userRepository.findOneBy).toHaveBeenNthCalledWith(1,{email:signUpDto.email})
-            expect(userRepository.findOneBy).toHaveBeenNthCalledWith(2,{login:signUpDto.login})
+            expect(userRepository.findOneBy).toHaveBeenNthCalledWith(1, {
+                email: signUpDto.email,
+            })
+            expect(userRepository.findOneBy).toHaveBeenNthCalledWith(2, {
+                login: signUpDto.login,
+            })
             expect(bcryptjs.hash).not.toHaveBeenCalled()
             expect(userRepository.save).not.toHaveBeenCalled()
             expect(tokenService.emailToken).not.toHaveBeenCalled()
             expect(mailService.signUpMail).not.toHaveBeenCalled()
+        })
+    })
+
+    describe('signIn', () => {
+        let signInDto: SignInDto
+        let agent: string
+        let user: User
+        let authTokens: AuthTokens
+
+        beforeEach(() => {
+            signInDto = signUpDtoMock as SignInDto
+            agent = 'agent'
+            user = userMock as User
+            authTokens = authTokensMock
+        })
+
+        it('should be sign in', async () => {
+            jest.spyOn(userRepository, 'findOneBy').mockResolvedValueOnce(user)
+            jest.spyOn(bcryptjs, 'compare').mockImplementationOnce(() => true)
+            jest.spyOn(tokenService, 'authorization').mockResolvedValueOnce(
+                authTokens,
+            )
+
+            const result = await service.signIn(signInDto, agent)
+
+            expect(userRepository.findOneBy).toHaveBeenCalledWith([
+                { email: signInDto.loginOrEmail },
+                { login: signInDto.loginOrEmail },
+            ])
+            expect(bcryptjs.compare).toHaveBeenCalledWith(signInDto.password,user.password)
+            expect(tokenService.authorization).toHaveBeenCalledWith(user,agent)
+            expect(result).toEqual(authTokens)
+        })
+
+        it('does not exist email or login', async () => {
+            jest.spyOn(userRepository, 'findOneBy').mockResolvedValueOnce(null)
+            jest.spyOn(bcryptjs, 'compare')
+            jest.spyOn(tokenService, 'authorization')
+
+            await expect(service.signIn(signInDto, agent)).rejects.toThrow(NotFoundException)
+
+            expect(userRepository.findOneBy).toHaveBeenCalledWith([
+                { email: signInDto.loginOrEmail },
+                { login: signInDto.loginOrEmail },
+            ])
+            expect(bcryptjs.compare).not.toHaveBeenCalled()
+            expect(tokenService.authorization).not.toHaveBeenCalled()
+        })
+
+        it('wrong password', async () => {
+            jest.spyOn(userRepository, 'findOneBy').mockResolvedValueOnce(user)
+            jest.spyOn(bcryptjs, 'compare').mockImplementationOnce(()=>false)
+            jest.spyOn(tokenService, 'authorization')
+
+            await expect(service.signIn(signInDto, agent)).rejects.toThrow(ConflictException)
+
+            expect(userRepository.findOneBy).toHaveBeenCalledWith([
+                { email: signInDto.loginOrEmail },
+                { login: signInDto.loginOrEmail },
+            ])
+            expect(bcryptjs.compare).toHaveBeenCalledWith(signInDto.password,user.password)
+            expect(tokenService.authorization).not.toHaveBeenCalled()
         })
     })
 })
