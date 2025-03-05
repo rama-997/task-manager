@@ -8,6 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { User } from '@src/auth/entities'
 import { MailModule } from '@src/mail/mail.module'
 import { TokenModule } from '@src/token/token.module'
+import { RoleModule } from '@src/role/role.module'
 
 @Module({
     imports: [
@@ -15,7 +16,8 @@ import { TokenModule } from '@src/token/token.module'
         JwtModule.register({}),
         TypeOrmModule.forFeature([User]),
         MailModule,
-        forwardRef(()=>TokenModule)
+        forwardRef(()=>TokenModule),
+        RoleModule
     ],
     controllers: [AuthController],
     providers: [AuthService, JwtStrategy],

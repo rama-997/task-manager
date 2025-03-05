@@ -1,6 +1,17 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common'
+import {
+    Body,
+    Controller,
+    HttpCode,
+    HttpStatus,
+    Post,
+    Res,
+} from '@nestjs/common'
 import { AuthService } from './auth.service'
-import { SignUpDto } from '@src/auth/dto'
+import { SignInDto, SignUpDto } from '@src/auth/dto'
+import { Response } from 'express'
+import { cookieOptions, resOption } from '@libs/options'
+import { IAccessToken } from '@src/auth/types'
+import { UserAgent } from '@libs/decorators'
 
 @Controller('auth')
 export class AuthController {
@@ -8,7 +19,20 @@ export class AuthController {
 
     @Post('signup')
     @HttpCode(HttpStatus.OK)
-    async signUp(@Body() signUpDto:SignUpDto):Promise<{message:string}>{
+    async signUp(@Body() signUpDto: SignUpDto): Promise<{ message: string }> {
         return this.authService.signUp(signUpDto)
+    }
+
+    @Post('signin')
+    @HttpCode(HttpStatus.OK)
+    async signIn(
+        @Body() signInDto: SignInDto,
+        @Res(resOption) res: Response,
+        @UserAgent() agent:string
+    ): Promise<IAccessToken> {
+        const { accessToken, refreshToken } =
+            await this.authService.signIn(signInDto,agent)
+        res.cookie('token', refreshToken, cookieOptions)
+        return { accessToken }
     }
 }

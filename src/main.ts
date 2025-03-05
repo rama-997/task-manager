@@ -3,12 +3,15 @@ import { AppModule } from './app.module'
 import { ConfigService } from '@nestjs/config'
 import { Logger, ValidationPipe } from '@nestjs/common'
 import { HttpExceptionFilter } from '@libs/common'
+import * as cookieParser from 'cookie-parser'
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule)
     app.useGlobalFilters(new HttpExceptionFilter())
     app.useGlobalPipes(new ValidationPipe({ transform: true }))
     app.setGlobalPrefix('api')
+
+    app.use(cookieParser())
 
     const configService = app.get<ConfigService>(ConfigService)
     const PORT = configService.getOrThrow<string>('APP_PORT')
