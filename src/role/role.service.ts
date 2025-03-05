@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Role } from '@src/role/entities'
 import { Repository } from 'typeorm'
 import { CreateRoleDto, UpdateRoleDto } from '@src/role/dto'
+import { ERoles } from '@src/role/types'
 
 @Injectable()
 export class RoleService {
@@ -18,8 +19,8 @@ export class RoleService {
         return this.roleRepo.save(createRoleDto)
     }
 
-    async findOne(id: string): Promise<Role> {
-        const role=await this.roleRepo.findOneBy({id})
+    async findOne(value:ERoles): Promise<Role> {
+        const role=await this.roleRepo.findOneBy({value})
         if(!role){
             throw new NotFoundException('Нет роли')
         }
