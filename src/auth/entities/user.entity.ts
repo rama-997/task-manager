@@ -46,11 +46,11 @@ export class User {
     readonly roles: Role[]
 
     @ManyToMany(()=>Token,token=>token.users)
-    readonly tokens: Token[]
+    readonly tokens?: Token[]
 
     @CreateDateColumn({ name: 'created_at' })
-    readonly createdAt: Date
+    readonly createdAt?: Date
 
     @UpdateDateColumn({ name: 'updated_at' })
-    readonly updatedAt: Date
+    readonly updatedAt?: Date
 }

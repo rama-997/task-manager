@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, ParseEnumPipe, ParseUUIDPipe, Patch, Post } from '@nestjs/common'
 import { RoleService } from './role.service'
 import { Role } from '@src/role/entities'
 import { CreateRoleDto, UpdateRoleDto } from '@src/role/dto'
@@ -16,9 +16,9 @@ export class RoleController {
         return this.roleService.create(createRoleDto)
     }
 
-    @Get(':id')
-    async finOne(@Param('id',new ParseUUIDPipe(parseUUIDConfig)) id: string): Promise<Role> {
-        return this.roleService.findOne(id)
+    @Get(':value')
+    async finOne(@Param('value',new ParseEnumPipe(ERoles)) value: ERoles): Promise<Role> {
+        return this.roleService.findOne(value)
     }
 
     @Patch(':id')

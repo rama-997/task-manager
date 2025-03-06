@@ -10,7 +10,7 @@ import { User } from '@src/auth/entities'
 @Entity()
 export class Token {
     @PrimaryGeneratedColumn('uuid')
-    readonly id?: string
+    readonly id: string
 
     @Column({ name: 'refresh_token' })
     refreshToken: string
