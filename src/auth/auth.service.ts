@@ -50,12 +50,17 @@ export class AuthService {
     }
 
     async signIn(signInDto: SignInDto, agent: string): Promise<AuthTokens> {
-        const user = await this.userRepository.findOneBy([
-            { login: signInDto.loginOrEmail },
-            { email: signInDto.loginOrEmail },
-        ])
+        const user = await this.userRepository.findOne({
+            where: [
+                { login: signInDto.loginOrEmail },
+                { email: signInDto.loginOrEmail },
+            ],
+            relations:['roles']
+        })
         if (!user) {
-            throw new NotFoundException('Неправильный логин или e-mail')
+            throw new NotFoundException(
+                'Такой логин или e-mail не зарегистрирован',
+            )
         }
         const isCorrectPass = await compare(signInDto.password, user.password)
         if (!isCorrectPass) {
