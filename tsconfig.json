@@ -44,11 +44,23 @@
       "@libs/options/*": [
         "libs/options/src/*"
       ],
+      "@libs/utils": [
+        "libs/utils/src"
+      ],
+      "@libs/utils/*": [
+        "libs/utils/src/*"
+      ],
       "@src/auth": [
         "src/auth"
       ],
       "@src/auth/*": [
         "src/auth/*"
+      ],
+      "@src/mail": [
+        "src/mail"
+      ],
+      "@src/mail/*": [
+        "src/mail/*"
       ],
       "@src/role": [
         "src/role"
@@ -61,12 +73,6 @@
       ],
       "@src/token/*": [
         "src/token/*"
-      ],
-      "@src/mail": [
-        "src/mail"
-      ],
-      "@src/mail/*": [
-        "src/mail/*"
       ]
     }
   }
