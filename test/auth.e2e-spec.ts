@@ -62,25 +62,31 @@ describe('AuthController (e2e)', () => {
         await app.close()
     })
 
-    it.skip('/signup (POST)', async () => {
-        await roleRepository.save({ value: ERoles.USER })
+    describe('/signup (POST)',()=>{
+        beforeEach(async () => {
+            await roleRepository.query('TRUNCATE role CASCADE;')
+            await roleRepository.query('TRUNCATE "user" CASCADE;')
+            await roleRepository.save({ value: ERoles.USER })
+        })
 
-        return request(app.getHttpServer())
-            .post('/auth/signup')
-            .send(signUpDtoMock)
-            .then(async res => {
-                if (res.error) throw { ...res.error }
-                const result = res.body as { message: string }
+        it('', async () => {
+            return request(app.getHttpServer())
+                .post('/auth/signup')
+                .send(signUpDtoMock)
+                .then(async res => {
+                    if (res.error) throw { ...res.error }
+                    const result = res.body as { message: string }
 
-                const user = await userRepository.findOneBy({
-                    email: signUpDtoMock.email,
-                    login: signUpDtoMock.login,
+                    const user = await userRepository.findOneBy({
+                        email: signUpDtoMock.email,
+                        login: signUpDtoMock.login,
+                    })
+
+                    expect(user).toBeDefined()
+                    expect(res.status).toBe(HttpStatus.OK)
+                    expect(result).toEqual({ message: expect.any(String) })
                 })
-
-                expect(user).toBeDefined()
-                expect(res.status).toBe(HttpStatus.OK)
-                expect(result).toEqual({ message: expect.any(String) })
-            })
+        })
     })
 
     describe('/signin (POST)', () => {
