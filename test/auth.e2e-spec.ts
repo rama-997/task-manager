@@ -9,12 +9,14 @@ import { getRepositoryToken } from '@nestjs/typeorm'
 import { User } from '@src/auth/entities'
 import { Repository } from 'typeorm'
 import { Role } from '@src/role/entities'
-import { Token } from '@src/token/entities'
-import { createRoleDtoMock } from '@src/role/mocks'
 import { IAccessToken } from '@src/auth/types'
 import { ERoles } from '@src/role/types'
 import * as cookieParser from 'cookie-parser'
 import { SignInDto } from '@src/auth/dto'
+import { extractToken } from '@libs/utils'
+import { TokenService } from '@src/token/token.service'
+import { JwtService } from '@nestjs/jwt'
+import { Token } from '@src/token/entities'
 
 jest.mock('../src/mail/templates/email.template')
 jest.mock('@react-email/components', () => ({
@@ -24,8 +26,8 @@ jest.mock('@react-email/components', () => ({
 describe('AuthController (e2e)', () => {
     let app: INestApplication<App>
     let userRepository: Repository<User>
-    let tokenRepository: Repository<Token>
     let roleRepository: Repository<Role>
+    let tokenService:TokenService
 
     beforeAll(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -34,6 +36,8 @@ describe('AuthController (e2e)', () => {
                 { provide: getRepositoryToken(User), useClass: Repository },
                 { provide: getRepositoryToken(Role), useClass: Repository },
                 { provide: getRepositoryToken(Token), useClass: Repository },
+                TokenService,
+                JwtService
             ],
         }).compile()
 
@@ -49,9 +53,7 @@ describe('AuthController (e2e)', () => {
         roleRepository = moduleFixture.get<Repository<Role>>(
             getRepositoryToken(Role),
         )
-        tokenRepository = moduleFixture.get<Repository<Token>>(
-            getRepositoryToken(Token),
-        )
+        tokenService=moduleFixture.get<TokenService>(TokenService)
 
         await app.init()
     })
@@ -108,7 +110,15 @@ describe('AuthController (e2e)', () => {
                 .then(async res => {
                     if (res.error) throw { ...res.error }
                     const result = res.body as IAccessToken
+                    const token=extractToken(res,'token')
+                    console.log(token)
+                    const accessPayload=await tokenService.verifyAccessToken(token)
+                    const refreshPayload=await tokenService.verifyRefreshToken(token)
+                    const user=await userRepository.findOneBy({id:accessPayload.id})
 
+                    expect(accessPayload.roles).toBeDefined()
+                    expect(accessPayload.id).toBe(refreshPayload.id)
+                    expect(accessPayload.id).toBe(user!.id)
                     expect(res.status).toBe(HttpStatus.OK)
                     expect(result).toEqual({ accessToken: expect.any(String) })
                 })
