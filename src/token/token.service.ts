@@ -73,21 +73,33 @@ export class TokenService {
         return tokens
     }
 
-    async verifyAccessToken(token: string): Promise<UserPayload> {
-        return this.jwtService.verifyAsync(token, {
-            secret: this.configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
-        })
+    async verifyAccessToken(token: string): Promise<UserPayload|null> {
+        try{
+            return this.jwtService.verifyAsync<UserPayload>(token, {
+                secret: this.configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
+            })
+        }catch (e) {
+            return null
+        }
     }
 
-    async verifyRefreshToken(token: string): Promise<UserPayload> {
-        return this.jwtService.verifyAsync(token, {
-            secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
-        })
+    async verifyRefreshToken(token: string): Promise<UserPayload|null> {
+        try{
+            return this.jwtService.verifyAsync<UserPayload>(token, {
+                secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
+            })
+        }catch (e){
+            return null
+        }
     }
 
-    async verifyEmailToken(token: string): Promise<{ id: string }> {
-        return this.jwtService.verifyAsync(token, {
-            secret: this.configService.getOrThrow<string>('JWT_EMAIL_SECRET'),
-        })
+    async verifyEmailToken(token: string): Promise<{ id: string }|null> {
+        try{
+            return this.jwtService.verifyAsync<{id:string}>(token, {
+                secret: this.configService.getOrThrow<string>('JWT_EMAIL_SECRET'),
+            })
+        }catch (e) {
+            return null
+        }
     }
 }
