@@ -1,7 +1,7 @@
 import {
     ConflictException,
     Injectable,
-    NotFoundException,
+    NotFoundException, UnauthorizedException,
 } from '@nestjs/common'
 import { SignInDto, SignUpDto } from '@src/auth/dto'
 import { InjectRepository } from '@nestjs/typeorm'
@@ -67,5 +67,22 @@ export class AuthService {
             throw new ConflictException('Неверный пароль')
         }
         return this.tokenService.authorization(user, agent)
+    }
+
+    async emailConfirm(token:string,agent:string):Promise<AuthTokens>{
+        if(!token) {
+            throw new UnauthorizedException('Пользователь не авторизован')
+        }
+        const payload=await this.tokenService.verifyEmailToken(token)
+        if(!payload) {
+            throw new UnauthorizedException('Пользователь не авторизован')
+        }
+        const user=await this.userRepository.findOneBy({id: payload.id})
+        if (!user) {
+            throw new UnauthorizedException('Пользователь не авторизован')
+        }
+        user.isConfirm=true
+        await this.userRepository.save(user)
+        return this.tokenService.authorization(user,agent)
     }
 }
