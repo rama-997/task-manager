@@ -3,7 +3,7 @@ import * as request from 'supertest'
 export const extractToken = (
     res: request.Response,
     token: string,
-): string | null => {
+): string => {
     const cookies = res.headers['set-cookie'] as any
 
     return cookies
