@@ -84,4 +84,10 @@ export class TokenService {
             secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
         })
     }
+
+    async verifyEmailToken(token: string): Promise<{ id: string }> {
+        return this.jwtService.verifyAsync(token, {
+            secret: this.configService.getOrThrow<string>('JWT_EMAIL_SECRET'),
+        })
+    }
 }
