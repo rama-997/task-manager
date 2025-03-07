@@ -12,51 +12,70 @@ export class TokenService {
     constructor(
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
-        @InjectRepository(Token) private readonly tokenRepository:Repository<Token>
-    ){}
+        @InjectRepository(Token)
+        private readonly tokenRepository: Repository<Token>,
+    ) {}
 
-    toUserPayload(user:User):UserPayload{
-        const roles=user.roles.map(role=>role.value)
+    toUserPayload(user: User): UserPayload {
+        const roles = user.roles.map(role => role.value)
         return {
-            id:user.id,
-            roles
+            id: user.id,
+            roles,
         }
     }
 
     async authTokens(userPayload: UserPayload): Promise<AuthTokens> {
         const accessToken = await this.jwtService.signAsync(userPayload, {
             expiresIn: '1h',
-            secret:this.configService.getOrThrow<string>('JWT_ACCESS_SECRET')
+            secret: this.configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
         })
         const refreshToken = await this.jwtService.signAsync(userPayload, {
             expiresIn: '7d',
-            secret:this.configService.getOrThrow<string>('JWT_REFRESH_SECRET')
+            secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
         })
 
         return { accessToken, refreshToken }
     }
 
-    async emailToken(id:string): Promise<string> {
-        return this.jwtService.signAsync({id}, {
-            secret: this.configService.getOrThrow<string>('JWT_EMAIL_SECRET'),
-            expiresIn:'1h'
-        })
+    async emailToken(id: string): Promise<string> {
+        return this.jwtService.signAsync(
+            { id },
+            {
+                secret: this.configService.getOrThrow<string>(
+                    'JWT_EMAIL_SECRET',
+                ),
+                expiresIn: '1h',
+            },
+        )
     }
 
-    async updateAuthToken(refreshToken:string,agent:string,user:User){
-        const token=await this.tokenRepository.findOneBy({refreshToken,userAgent:agent})
-        if(token){
-            token.refreshToken=refreshToken
+    async updateAuthToken(refreshToken: string, agent: string, user: User) {
+        const token = await this.tokenRepository.findOneBy({
+            refreshToken,
+            userAgent: agent,
+        })
+        if (token) {
+            token.refreshToken = refreshToken
             await this.tokenRepository.save(token)
-        }else{
-            await this.tokenRepository.save({refreshToken,userAgent:agent,users:[user]})
+        } else {
+            await this.tokenRepository.save({
+                refreshToken,
+                userAgent: agent,
+                users: [user],
+            })
         }
     }
 
-    async authorization(user:User,agent:string):Promise<AuthTokens>{
-        const payload=this.toUserPayload(user)
-        const tokens=await this.authTokens(payload)
-        await this.updateAuthToken(tokens.refreshToken,agent,user)
+    async authorization(user: User, agent: string): Promise<AuthTokens> {
+        const payload = this.toUserPayload(user)
+        const tokens = await this.authTokens(payload)
+        await this.updateAuthToken(tokens.refreshToken, agent, user)
         return tokens
+    }
+
+    async verifyAccessToken(token: string): Promise<UserPayload> {
+        return this.jwtService.verifyAsync(token, {
+            secret: this.configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
+        })
     }
 }
