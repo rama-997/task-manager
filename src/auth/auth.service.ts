@@ -85,4 +85,8 @@ export class AuthService {
         await this.userRepository.save(user)
         return this.tokenService.authorization(user,agent)
     }
+
+    async logout(token:string){
+        await this.tokenService.deleteRefreshToken(token)
+    }
 }

@@ -102,4 +102,8 @@ export class TokenService {
             return null
         }
     }
+
+    async deleteRefreshToken(refreshToken: string): Promise<void> {
+        await this.tokenRepository.delete({refreshToken})
+    }
 }

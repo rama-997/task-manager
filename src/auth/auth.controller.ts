@@ -11,7 +11,7 @@ import { SignInDto, SignUpDto } from '@src/auth/dto'
 import { Response } from 'express'
 import { cookieOptions, resOption } from '@libs/options'
 import { IAccessToken } from '@src/auth/types'
-import { UserAgent } from '@libs/decorators'
+import { Cookie, UserAgent } from '@libs/decorators'
 import { ConfigService } from '@nestjs/config'
 
 @Controller('auth')
@@ -44,5 +44,13 @@ export class AuthController {
             await this.authService.signIn(signInDto, agent)
         res.cookie('token', refreshToken, cookieOptions)
         return {accessToken}
+    }
+
+    @Get('logout')
+    async logout(@Cookie() cookies:any,@Res() res:Response){
+        const {token}=cookies
+        await this.authService.logout(token)
+        res.clearCookie('token')
+        res.status(HttpStatus.OK).json({message:'logout'})
     }
 }
