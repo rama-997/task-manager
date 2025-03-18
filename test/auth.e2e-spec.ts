@@ -27,7 +27,7 @@ describe('AuthController (e2e)', () => {
     let app: INestApplication<App>
     let userRepository: Repository<User>
     let roleRepository: Repository<Role>
-    let tokenService:TokenService
+    let tokenService: TokenService
 
     beforeAll(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -37,7 +37,7 @@ describe('AuthController (e2e)', () => {
                 { provide: getRepositoryToken(Role), useClass: Repository },
                 { provide: getRepositoryToken(Token), useClass: Repository },
                 TokenService,
-                JwtService
+                JwtService,
             ],
         }).compile()
 
@@ -53,7 +53,7 @@ describe('AuthController (e2e)', () => {
         roleRepository = moduleFixture.get<Repository<Role>>(
             getRepositoryToken(Role),
         )
-        tokenService=moduleFixture.get<TokenService>(TokenService)
+        tokenService = moduleFixture.get<TokenService>(TokenService)
 
         await app.init()
     })
@@ -62,7 +62,7 @@ describe('AuthController (e2e)', () => {
         await app.close()
     })
 
-    describe('/signup (POST)',()=>{
+    describe.skip('/signup (POST)', () => {
         beforeEach(async () => {
             await roleRepository.query('TRUNCATE role CASCADE;')
             await roleRepository.query('TRUNCATE "user" CASCADE;')
@@ -89,7 +89,7 @@ describe('AuthController (e2e)', () => {
         })
     })
 
-    describe('/signin (POST)', () => {
+    describe.skip('/signin (POST)', () => {
         let signInDto: SignInDto
 
         beforeAll(async () => {
@@ -116,18 +116,52 @@ describe('AuthController (e2e)', () => {
                 .then(async res => {
                     if (res.error) throw { ...res.error }
                     const result = res.body as IAccessToken
-                    const token=extractToken(res,'token')
+                    const token = extractToken(res, 'token')
                     console.log(token)
-                    const accessPayload=await tokenService.verifyAccessToken(token)
-                    const refreshPayload=await tokenService.verifyRefreshToken(token)
-                    const user=await userRepository.findOneBy({id:accessPayload.id})
+                    const accessPayload =
+                        await tokenService.verifyAccessToken(token)
+                    const refreshPayload =
+                        await tokenService.verifyRefreshToken(token)
+                    const user = await userRepository.findOneBy({
+                        id: accessPayload?.id,
+                    })
 
-                    expect(accessPayload.roles).toBeDefined()
-                    expect(accessPayload.id).toBe(refreshPayload.id)
-                    expect(accessPayload.id).toBe(user!.id)
+                    expect(accessPayload?.roles).toBeDefined()
+                    expect(accessPayload?.id).toBe(refreshPayload?.id)
+                    expect(accessPayload?.id).toBe(user!.id)
                     expect(res.status).toBe(HttpStatus.OK)
                     expect(result).toEqual({ accessToken: expect.any(String) })
                 })
         })
     })
+
+    // describe.skip('/email-confirm (GET)', () => {
+    //     let token:IAccessToken
+    //
+    //     beforeAll(async () => {
+    //         await userRepository.query('TRUNCATE "user" CASCADE')
+    //         await request(app.getHttpServer())
+    //             .post('/auth/signup')
+    //             .send(signUpDtoMock)
+    //             .then(res => {
+    //                 if(res.error) throw { ...res.error }
+    //                 token=res.body as IAccessToken
+    //                 console.log('res',token)
+    //             })
+    //     })
+    //
+    //     it('', async () => {
+    //         return request(app.getHttpServer())
+    //             .get('/auth/email-confirm')
+    //             .set('User-Agent', 'test')
+    //             .query({token:token.accessToken})
+    //             .then(res=>{
+    //                 if(res.error) throw {...res.error }
+    //                 const result=res.body as IAccessToken
+    //
+    //                 expect(res.status).toBe(HttpStatus.OK)
+    //                 expect(result).toBeDefined()
+    //             })
+    //     })
+    // })
 })

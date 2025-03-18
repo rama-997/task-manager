@@ -71,15 +71,15 @@ export class AuthService {
 
     async emailConfirm(token:string,agent:string):Promise<AuthTokens>{
         if(!token) {
-            throw new UnauthorizedException('Пользователь не авторизован')
+            throw new UnauthorizedException()
         }
         const payload=await this.tokenService.verifyEmailToken(token)
         if(!payload) {
-            throw new UnauthorizedException('Пользователь не авторизован')
+            throw new UnauthorizedException()
         }
         const user=await this.userRepository.findOneBy({id: payload.id})
         if (!user) {
-            throw new UnauthorizedException('Пользователь не авторизован')
+            throw new UnauthorizedException()
         }
         user.isConfirm=true
         await this.userRepository.save(user)
