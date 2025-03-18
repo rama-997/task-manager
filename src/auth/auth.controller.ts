@@ -53,4 +53,12 @@ export class AuthController {
         res.clearCookie('token')
         res.status(HttpStatus.OK).json({message:'logout'})
     }
+
+    @Get('refresh-token')
+    async refreshToken(@Cookie() cookies:any,@UserAgent() agent:string,@Res() res:Response){
+        const {token}=cookies
+        const tokens=await this.authService.refreshToken(token,agent)
+        res.cookie('token',tokens.refreshToken,cookieOptions)
+        res.status(HttpStatus.OK).json({message:'Refreshed'})
+    }
 }

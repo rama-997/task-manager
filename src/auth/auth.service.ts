@@ -13,6 +13,7 @@ import { TokenService } from '@src/token/token.service'
 import { AuthTokens } from '@src/token/types'
 import { RoleService } from '@src/role/role.service'
 import { ERoles } from '@src/role/types'
+import { IAccessToken } from '@src/auth/types'
 
 @Injectable()
 export class AuthService {
@@ -88,5 +89,14 @@ export class AuthService {
 
     async logout(token:string){
         await this.tokenService.deleteRefreshToken(token)
+    }
+
+    async refreshToken(token:string,agent:string):Promise<AuthTokens>{
+        const payload=await this.tokenService.refreshToken(token)
+        const user=await this.userRepository.findOneBy({id: payload.id})
+        if (!user) {
+            throw new UnauthorizedException()
+        }
+        return this.tokenService.authorization(user,agent)
     }
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { AuthTokens, UserPayload } from '@src/token/types'
 import { ConfigService } from '@nestjs/config'
@@ -105,5 +105,20 @@ export class TokenService {
 
     async deleteRefreshToken(refreshToken: string): Promise<void> {
         await this.tokenRepository.delete({refreshToken})
+    }
+
+    async refreshToken(refreshToken:string):Promise<UserPayload>{
+        if(!refreshToken){
+            throw new UnauthorizedException()
+        }
+        const token=await this.tokenRepository.findOneBy({refreshToken})
+        if(!token){
+            throw new UnauthorizedException()
+        }
+        const payload=await this.verifyRefreshToken(refreshToken)
+        if(!payload){
+            throw new UnauthorizedException()
+        }
+        return payload
     }
 }
