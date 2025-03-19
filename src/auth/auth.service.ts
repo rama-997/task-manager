@@ -3,7 +3,7 @@ import {
     Injectable,
     NotFoundException, UnauthorizedException,
 } from '@nestjs/common'
-import { SignInDto, SignUpDto } from '@src/auth/dto'
+import { ResetPassDto, SignInDto, SignUpDto } from '@src/auth/dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { User } from '@src/auth/entities'
 import { Repository } from 'typeorm'
@@ -13,7 +13,6 @@ import { TokenService } from '@src/token/token.service'
 import { AuthTokens } from '@src/token/types'
 import { RoleService } from '@src/role/role.service'
 import { ERoles } from '@src/role/types'
-import { IAccessToken } from '@src/auth/types'
 
 @Injectable()
 export class AuthService {
@@ -98,5 +97,14 @@ export class AuthService {
             throw new UnauthorizedException()
         }
         return this.tokenService.authorization(user,agent)
+    }
+
+    async resetPass(resetPassDto:ResetPassDto){
+        const user=await this.userRepository.findOneBy({email:resetPassDto.email})
+        if(!user) {
+            throw new NotFoundException('email dose not found')
+        }
+        const token=await this.tokenService.verifyPasswordReset(resetPassDto.email)
+
     }
 }
