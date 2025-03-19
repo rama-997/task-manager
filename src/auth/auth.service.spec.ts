@@ -65,6 +65,14 @@ describe('AuthService', () => {
         roleService = module.get<RoleService>(RoleService)
     })
 
+    it('should be defined', () => {
+        expect(service).toBeDefined()
+        expect(tokenService).toBeDefined()
+        expect(mailService).toBeDefined()
+        expect(userRepository).toBeDefined()
+        expect(roleService).toBeDefined()
+    })
+
     describe('signUp', () => {
         let hashedPass: string
         let user: Partial<User>

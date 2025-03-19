@@ -73,52 +73,69 @@ export class TokenService {
         return tokens
     }
 
-    async verifyAccessToken(token: string): Promise<UserPayload|null> {
-        try{
+    async verifyAccessToken(token: string): Promise<UserPayload | null> {
+        try {
             return this.jwtService.verifyAsync<UserPayload>(token, {
-                secret: this.configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
+                secret: this.configService.getOrThrow<string>(
+                    'JWT_ACCESS_SECRET',
+                ),
             })
-        }catch (e) {
+        } catch (e) {
             return null
         }
     }
 
-    async verifyRefreshToken(token: string): Promise<UserPayload|null> {
-        try{
+    async verifyRefreshToken(token: string): Promise<UserPayload | null> {
+        try {
             return this.jwtService.verifyAsync<UserPayload>(token, {
-                secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
+                secret: this.configService.getOrThrow<string>(
+                    'JWT_REFRESH_SECRET',
+                ),
             })
-        }catch (e){
+        } catch (e) {
             return null
         }
     }
 
-    async verifyEmailToken(token: string): Promise<{ id: string }|null> {
-        try{
-            return this.jwtService.verifyAsync<{id:string}>(token, {
-                secret: this.configService.getOrThrow<string>('JWT_EMAIL_SECRET'),
+    async verifyEmailToken(token: string): Promise<{ id: string } | null> {
+        try {
+            return this.jwtService.verifyAsync<{ id: string }>(token, {
+                secret: this.configService.getOrThrow<string>(
+                    'JWT_EMAIL_SECRET',
+                ),
             })
-        }catch (e) {
+        } catch (e) {
             return null
         }
     }
 
     async deleteRefreshToken(refreshToken: string): Promise<void> {
-        await this.tokenRepository.delete({refreshToken})
+        await this.tokenRepository.delete({ refreshToken })
     }
 
-    async refreshToken(refreshToken:string):Promise<UserPayload>{
-        if(!refreshToken){
+    async refreshToken(refreshToken: string): Promise<UserPayload> {
+        if (!refreshToken) {
             throw new UnauthorizedException()
         }
-        const token=await this.tokenRepository.findOneBy({refreshToken})
-        if(!token){
+        const token = await this.tokenRepository.findOneBy({ refreshToken })
+        if (!token) {
             throw new UnauthorizedException()
         }
-        const payload=await this.verifyRefreshToken(refreshToken)
-        if(!payload){
+        const payload = await this.verifyRefreshToken(refreshToken)
+        if (!payload) {
             throw new UnauthorizedException()
         }
         return payload
+    }
+
+    async verifyPasswordReset(email: string): Promise<string> {
+        return this.jwtService.signAsync(
+            { email },
+            {
+                secret: this.configService.getOrThrow<string>(
+                    'RESET_PASS_SECRET',
+                ),
+            },
+        )
     }
 }

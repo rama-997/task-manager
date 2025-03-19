@@ -2,7 +2,8 @@ import {
     IsEmail,
     IsNotEmpty,
     IsString,
-    IsStrongPassword, MaxLength,
+    IsStrongPassword,
+    MaxLength,
 } from 'class-validator'
 import { Match } from '@libs/decorators'
 
@@ -16,15 +17,15 @@ export class SignUpDto {
 
     @IsStrongPassword(
         {
-            minLength: 3,
+            minLength: 6,
             minLowercase: 0,
             minNumbers: 0,
             minSymbols: 0,
             minUppercase: 0,
         },
-        { message: 'Пароль недостаточно надёжен' },
+        { message: 'Пароль должен быть более 6 символов' },
     )
-    @MaxLength(12,{message:'Пароль не должен превышать 12 символов'})
+    @MaxLength(12, { message: 'Пароль не должен превышать 12 символов' })
     password: string
 
     @Match('password')

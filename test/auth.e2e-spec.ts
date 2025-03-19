@@ -9,7 +9,7 @@ import { getRepositoryToken } from '@nestjs/typeorm'
 import { User } from '@src/auth/entities'
 import { Repository } from 'typeorm'
 import { Role } from '@src/role/entities'
-import { IAccessToken } from '@src/auth/types'
+import { IAccessToken, IAuthMess } from '@src/auth/types'
 import { ERoles } from '@src/role/types'
 import * as cookieParser from 'cookie-parser'
 import { SignInDto } from '@src/auth/dto'
@@ -62,20 +62,20 @@ describe('AuthController (e2e)', () => {
         await app.close()
     })
 
-    describe.skip('/signup (POST)', () => {
-        beforeEach(async () => {
+    describe('/sign-up (POST)', () => {
+        beforeAll(async () => {
             await roleRepository.query('TRUNCATE role CASCADE;')
             await roleRepository.query('TRUNCATE "user" CASCADE;')
             await roleRepository.save({ value: ERoles.USER })
         })
 
-        it('', async () => {
+        it('should be signed-up', async () => {
             return request(app.getHttpServer())
-                .post('/auth/signup')
+                .post('/auth/sign-up')
                 .send(signUpDtoMock)
                 .then(async res => {
                     if (res.error) throw { ...res.error }
-                    const result = res.body as { message: string }
+                    const result = res.body as IAuthMess
 
                     const user = await userRepository.findOneBy({
                         email: signUpDtoMock.email,
