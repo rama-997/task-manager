@@ -1,7 +1,8 @@
 import {
     ConflictException,
     Injectable,
-    NotFoundException, UnauthorizedException,
+    NotFoundException,
+    UnauthorizedException,
 } from '@nestjs/common'
 import { ResetPassDto, SignInDto, SignUpDto } from '@src/auth/dto'
 import { InjectRepository } from '@nestjs/typeorm'
@@ -13,6 +14,7 @@ import { TokenService } from '@src/token/token.service'
 import { AuthTokens } from '@src/token/types'
 import { RoleService } from '@src/role/role.service'
 import { ERoles } from '@src/role/types'
+import { IAuthMess } from '@src/auth/types'
 
 @Injectable()
 export class AuthService {
@@ -24,7 +26,7 @@ export class AuthService {
         private readonly roleService: RoleService,
     ) {}
 
-    async signUp(signUpDto: SignUpDto): Promise<{ message: string }> {
+    async signUp(signUpDto: SignUpDto): Promise<IAuthMess> {
         const email = await this.userRepository.findOneBy({
             email: signUpDto.email,
         })
@@ -55,7 +57,7 @@ export class AuthService {
                 { login: signInDto.loginOrEmail },
                 { email: signInDto.loginOrEmail },
             ],
-            relations:['roles']
+            relations: ['roles'],
         })
         if (!user) {
             throw new NotFoundException(
@@ -69,42 +71,45 @@ export class AuthService {
         return this.tokenService.authorization(user, agent)
     }
 
-    async emailConfirm(token:string,agent:string):Promise<AuthTokens>{
-        if(!token) {
+    async emailConfirm(token: string, agent: string): Promise<AuthTokens> {
+        if (!token) {
             throw new UnauthorizedException()
         }
-        const payload=await this.tokenService.verifyEmailToken(token)
-        if(!payload) {
+        const payload = await this.tokenService.verifyEmailToken(token)
+        if (!payload) {
             throw new UnauthorizedException()
         }
-        const user=await this.userRepository.findOneBy({id: payload.id})
+        const user = await this.userRepository.findOneBy({ id: payload.id })
         if (!user) {
             throw new UnauthorizedException()
         }
-        user.isConfirm=true
+        user.isConfirm = true
         await this.userRepository.save(user)
-        return this.tokenService.authorization(user,agent)
+        return this.tokenService.authorization(user, agent)
     }
 
-    async logout(token:string){
+    async logout(token: string) {
         await this.tokenService.deleteRefreshToken(token)
     }
 
-    async refreshToken(token:string,agent:string):Promise<AuthTokens>{
-        const payload=await this.tokenService.refreshToken(token)
-        const user=await this.userRepository.findOneBy({id: payload.id})
+    async refreshToken(token: string, agent: string): Promise<AuthTokens> {
+        const payload = await this.tokenService.refreshToken(token)
+        const user = await this.userRepository.findOneBy({ id: payload.id })
         if (!user) {
             throw new UnauthorizedException()
         }
-        return this.tokenService.authorization(user,agent)
+        return this.tokenService.authorization(user, agent)
     }
 
-    async resetPass(resetPassDto:ResetPassDto){
-        const user=await this.userRepository.findOneBy({email:resetPassDto.email})
-        if(!user) {
+    async resetPass(resetPassDto: ResetPassDto) {
+        const user = await this.userRepository.findOneBy({
+            email: resetPassDto.email,
+        })
+        if (!user) {
             throw new NotFoundException('email dose not found')
         }
-        const token=await this.tokenService.verifyPasswordReset(resetPassDto.email)
-
+        const token = await this.tokenService.verifyPasswordReset(
+            resetPassDto.email,
+        )
     }
 }

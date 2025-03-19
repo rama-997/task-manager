@@ -172,7 +172,7 @@ describe('AuthService', () => {
         })
     })
 
-    describe.skip('signIn', () => {
+    describe('signIn', () => {
         let signInDto: SignInDto
         let agent: string
         let user: User
@@ -186,7 +186,7 @@ describe('AuthService', () => {
         })
 
         it('should be sign in', async () => {
-            jest.spyOn(userRepository, 'findOneBy').mockResolvedValueOnce(user)
+            jest.spyOn(userRepository, 'findOne').mockResolvedValueOnce(user)
             jest.spyOn(bcryptjs, 'compare').mockImplementationOnce(() => true)
             jest.spyOn(tokenService, 'authorization').mockResolvedValueOnce(
                 authTokens,
@@ -194,10 +194,13 @@ describe('AuthService', () => {
 
             const result = await service.signIn(signInDto, agent)
 
-            expect(userRepository.findOneBy).toHaveBeenCalledWith([
-                { email: signInDto.loginOrEmail },
-                { login: signInDto.loginOrEmail },
-            ])
+            expect(userRepository.findOne).toHaveBeenCalledWith({
+                where: [
+                    { email: signInDto.loginOrEmail },
+                    { login: signInDto.loginOrEmail },
+                ],
+                relations: ['roles'],
+            })
             expect(bcryptjs.compare).toHaveBeenCalledWith(
                 signInDto.password,
                 user.password,
@@ -207,7 +210,7 @@ describe('AuthService', () => {
         })
 
         it('does not exist email or login', async () => {
-            jest.spyOn(userRepository, 'findOneBy').mockResolvedValueOnce(null)
+            jest.spyOn(userRepository, 'findOne').mockResolvedValueOnce(null)
             jest.spyOn(bcryptjs, 'compare')
             jest.spyOn(tokenService, 'authorization')
 
@@ -215,16 +218,19 @@ describe('AuthService', () => {
                 NotFoundException,
             )
 
-            expect(userRepository.findOneBy).toHaveBeenCalledWith([
-                { email: signInDto.loginOrEmail },
-                { login: signInDto.loginOrEmail },
-            ])
+            expect(userRepository.findOne).toHaveBeenCalledWith({
+                where: [
+                    { email: signInDto.loginOrEmail },
+                    { login: signInDto.loginOrEmail },
+                ],
+                relations: ['roles'],
+            })
             expect(bcryptjs.compare).not.toHaveBeenCalled()
             expect(tokenService.authorization).not.toHaveBeenCalled()
         })
 
         it('wrong password', async () => {
-            jest.spyOn(userRepository, 'findOneBy').mockResolvedValueOnce(user)
+            jest.spyOn(userRepository, 'findOne').mockResolvedValueOnce(user)
             jest.spyOn(bcryptjs, 'compare').mockImplementationOnce(() => false)
             jest.spyOn(tokenService, 'authorization')
 
@@ -232,10 +238,13 @@ describe('AuthService', () => {
                 ConflictException,
             )
 
-            expect(userRepository.findOneBy).toHaveBeenCalledWith([
-                { email: signInDto.loginOrEmail },
-                { login: signInDto.loginOrEmail },
-            ])
+            expect(userRepository.findOne).toHaveBeenCalledWith({
+                where: [
+                    { email: signInDto.loginOrEmail },
+                    { login: signInDto.loginOrEmail },
+                ],
+                relations: ['roles'],
+            })
             expect(bcryptjs.compare).toHaveBeenCalledWith(
                 signInDto.password,
                 user.password,
