@@ -79,7 +79,10 @@ export class AuthService {
         if (!payload) {
             throw new UnauthorizedException()
         }
-        const user = await this.userRepository.findOneBy({ id: payload.id })
+        const user = await this.userRepository.findOne({
+            where: { id: payload.id },
+            relations: ['roles'],
+        })
         if (!user) {
             throw new UnauthorizedException()
         }
