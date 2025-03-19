@@ -11,7 +11,7 @@ import { Repository } from 'typeorm'
 import { compare, hash } from 'bcryptjs'
 import { MailService } from '@src/mail/mail.service'
 import { TokenService } from '@src/token/token.service'
-import { AuthTokens } from '@src/token/types'
+import { IAuthTokens } from '@src/token/types'
 import { RoleService } from '@src/role/role.service'
 import { ERoles } from '@src/role/types'
 import { IAuthMess } from '@src/auth/types'
@@ -51,7 +51,7 @@ export class AuthService {
         return { message: 'Было отправлено письмо на вашу электронную почту' }
     }
 
-    async signIn(signInDto: SignInDto, agent: string): Promise<AuthTokens> {
+    async signIn(signInDto: SignInDto, agent: string): Promise<IAuthTokens> {
         const user = await this.userRepository.findOne({
             where: [
                 { login: signInDto.loginOrEmail },
@@ -71,7 +71,7 @@ export class AuthService {
         return this.tokenService.authorization(user, agent)
     }
 
-    async emailConfirm(token: string, agent: string): Promise<AuthTokens> {
+    async emailConfirm(token: string, agent: string): Promise<IAuthTokens> {
         if (!token) {
             throw new UnauthorizedException()
         }
@@ -95,7 +95,7 @@ export class AuthService {
         await this.tokenService.deleteRefreshToken(token)
     }
 
-    async refreshToken(token: string, agent: string): Promise<AuthTokens> {
+    async refreshToken(token: string, agent: string): Promise<IAuthTokens> {
         const payload = await this.tokenService.refreshToken(token)
         const user = await this.userRepository.findOneBy({ id: payload.id })
         if (!user) {

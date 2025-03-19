@@ -17,6 +17,8 @@ import { extractToken } from '@libs/utils'
 import { TokenService } from '@src/token/token.service'
 import { JwtService } from '@nestjs/jwt'
 import { Token } from '@src/token/entities'
+import { createRoleDtoMock } from '@src/role/mocks'
+import { IAuthTokens } from '@src/token/types'
 
 jest.mock('../src/mail/templates/email.template')
 jest.mock('@react-email/components', () => ({
@@ -85,6 +87,47 @@ describe('AuthController (e2e)', () => {
                     expect(user).toBeDefined()
                     expect(res.status).toBe(HttpStatus.OK)
                     expect(result).toEqual({ message: expect.any(String) })
+                })
+        })
+    })
+
+    describe('/email-confirm (GET)', () => {
+        let tokens: IAuthTokens
+        let user: User
+        let role: Role
+        let agent: string
+
+        beforeAll(async () => {
+            await roleRepository.query('TRUNCATE role CASCADE;')
+            await userRepository.query('TRUNCATE "user" CASCADE;')
+
+            agent = 'test agent'
+            role = await roleRepository.save(createRoleDtoMock)
+            user = await userRepository.save({
+                ...signUpDtoMock,
+                password: 'password',
+                roles: [role],
+            })
+            tokens = await tokenService.authorization(user, agent)
+        })
+
+        it('should be confirmed', async () => {
+            return request(app.getHttpServer())
+                .get('/auth/email-confirm')
+                .query({ token: tokens.accessToken })
+                .then(async res => {
+                    if (res.error) throw { ...res.error }
+                    const result = res.body as IAccessToken
+
+                    const payload = await tokenService.verifyAccessToken(
+                        result.accessToken,
+                    )
+                    const signedUpUser = await userRepository.findOneBy({
+                        id: payload?.id,
+                    })
+
+                    expect(res.status).toBe(HttpStatus.OK)
+                    expect(signedUpUser?.isConfirm).toBe(true)
                 })
         })
     })

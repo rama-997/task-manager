@@ -1,3 +1,3 @@
-import { AuthTokens } from '@src/token/types'
+import { IAuthTokens } from '@src/token/types'
 
-export type IAccessToken=Pick<AuthTokens, 'accessToken'>
+export type IAccessToken = Pick<IAuthTokens, 'accessToken'>

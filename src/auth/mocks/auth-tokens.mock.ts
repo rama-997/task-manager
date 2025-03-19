@@ -1,6 +1,6 @@
-import { AuthTokens } from '@src/token/types'
+import { IAuthTokens } from '@src/token/types'
 
-export const authTokensMock:AuthTokens={
-    refreshToken:'refreshToken',
-    accessToken:'accessToken',
+export const authTokensMock: IAuthTokens = {
+    refreshToken: 'refreshToken',
+    accessToken: 'accessToken',
 }

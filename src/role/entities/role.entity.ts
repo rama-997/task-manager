@@ -3,16 +3,16 @@ import { ERoles } from '@src/role/types'
 import { User } from '@src/auth/entities'
 
 @Entity()
-export class Role{
+export class Role {
     @PrimaryGeneratedColumn('uuid')
     readonly id: string
 
-    @Column({type:'enum',enum:ERoles,unique:true})
-    value:ERoles
+    @Column({ type: 'enum', enum: ERoles, unique: true })
+    value: ERoles
 
-    @Column({nullable:true})
-    description?:string
+    @Column({ nullable: true })
+    description?: string
 
-    @ManyToMany(()=>User,user=>user.roles)
-    users:User[]
+    @ManyToMany(() => User, user => user.roles)
+    readonly users?: User[]
 }

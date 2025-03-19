@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
-import { AuthTokens, UserPayload } from '@src/token/types'
+import { IAuthTokens, UserPayload } from '@src/token/types'
 import { ConfigService } from '@nestjs/config'
 import { User } from '@src/auth/entities'
 import { Token } from '@src/token/entities'
@@ -24,7 +24,7 @@ export class TokenService {
         }
     }
 
-    async authTokens(userPayload: UserPayload): Promise<AuthTokens> {
+    async authTokens(userPayload: UserPayload): Promise<IAuthTokens> {
         const accessToken = await this.jwtService.signAsync(userPayload, {
             expiresIn: '1h',
             secret: this.configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
@@ -66,7 +66,7 @@ export class TokenService {
         }
     }
 
-    async authorization(user: User, agent: string): Promise<AuthTokens> {
+    async authorization(user: User, agent: string): Promise<IAuthTokens> {
         const payload = this.toUserPayload(user)
         const tokens = await this.authTokens(payload)
         await this.updateAuthToken(tokens.refreshToken, agent, user)

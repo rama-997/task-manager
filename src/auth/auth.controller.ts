@@ -34,14 +34,12 @@ export class AuthController {
     async emailConfirm(
         @Query('token') token: string,
         @UserAgent() agent: string,
-        @Res() res: Response,
-    ) {
+        @Res(resOption) res: Response,
+    ): Promise<IAccessToken> {
         const { accessToken, refreshToken } =
             await this.authService.emailConfirm(token, agent)
         res.cookie('token', refreshToken, cookieOptions)
-        res.json({ accessToken }).redirect(
-            this.configService.getOrThrow<string>('CLIENT_DOMAIN'),
-        )
+        return { accessToken }
     }
 
     @Post('signin')
