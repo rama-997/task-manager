@@ -1,11 +1,11 @@
 import * as React from 'react'
 import {
     Body,
-    Html,
+    Button,
     Head,
     Heading,
+    Html,
     Text,
-    Button,
 } from '@react-email/components'
 
 interface EmailTemplateProps {
@@ -24,7 +24,10 @@ export const EmailTemplate = ({ domain, token }: EmailTemplateProps) => {
                 <Text>
                     Перейдите по ссылку чтобы подтвердить свой электронную почту
                 </Text>
-                <Button href={`${domain}/auth/email-confirm?token=${token}`}>
+                <Button
+                    // href={`${domain}/api/auth/email-confirm?token=${token}`}
+                    href={`http://localhost:5000/api/auth/email-confirm?token=${token}`}
+                >
                     Подтвердить почту
                 </Button>
             </Body>
