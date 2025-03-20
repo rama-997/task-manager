@@ -132,4 +132,28 @@ describe('AuthController', () => {
             expect(result).toEqual({ accessToken: authTokens.accessToken })
         })
     })
+
+    describe('logout', () => {
+        let cookies: { token: string }
+        let response: Response
+
+        beforeEach(() => {
+            cookies = { token: 'token' }
+            response = responseMock as Response
+        })
+
+        it('should be logout', async () => {
+            jest.spyOn(authService, 'logout').mockResolvedValueOnce()
+            jest.spyOn(response, 'clearCookie').mockReturnThis()
+            jest.spyOn(response, 'json').mockReturnThis()
+
+            await controller.logout(cookies, response)
+
+            expect(authService.logout).toHaveBeenCalledWith(cookies.token)
+            expect(response.clearCookie).toHaveBeenCalledWith('token')
+            expect(response.json).toHaveBeenCalledWith({
+                message: expect.any(String),
+            })
+        })
+    })
 })

@@ -58,7 +58,7 @@ export class AuthController {
         const { token } = cookies
         await this.authService.logout(token)
         res.clearCookie('token')
-        res.status(HttpStatus.OK).json({ message: 'logout' })
+        res.json({ message: 'success logout' })
     }
 
     @Get('refresh-token')
