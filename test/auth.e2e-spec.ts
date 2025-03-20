@@ -101,7 +101,7 @@ describe('AuthController (e2e)', () => {
             await roleRepository.query('TRUNCATE role CASCADE;')
             await userRepository.query('TRUNCATE "user" CASCADE;')
 
-            agent = 'test agent'
+            agent = 'supertest'
             role = await roleRepository.save(createRoleDtoMock)
             user = await userRepository.save({
                 ...signUpDtoMock,
@@ -114,6 +114,7 @@ describe('AuthController (e2e)', () => {
         it('should be confirmed', async () => {
             return request(app.getHttpServer())
                 .get('/auth/email-confirm')
+                .set('User-Agent', agent)
                 .query({ token: tokens.accessToken })
                 .then(async res => {
                     if (res.error) throw { ...res.error }
@@ -132,7 +133,7 @@ describe('AuthController (e2e)', () => {
         })
     })
 
-    describe.skip('/signin (POST)', () => {
+    describe('/sign-in (POST)', () => {
         let signInDto: SignInDto
 
         beforeAll(async () => {
@@ -140,7 +141,7 @@ describe('AuthController (e2e)', () => {
             await userRepository.query('TRUNCATE "role" CASCADE')
             await roleRepository.save({ value: ERoles.USER })
             await request(app.getHttpServer())
-                .post('/auth/signup')
+                .post('/auth/sign-up')
                 .send(signUpDtoMock)
                 .then(res => {
                     if (res.error) throw { ...res.error }
@@ -151,16 +152,16 @@ describe('AuthController (e2e)', () => {
             }
         })
 
-        it('', async () => {
+        it('should signedIn', async () => {
             return request(app.getHttpServer())
-                .post('/auth/signin')
+                .post('/auth/sign-in')
                 .set('User-Agent', 'test')
                 .send(signInDto)
                 .then(async res => {
                     if (res.error) throw { ...res.error }
                     const result = res.body as IAccessToken
                     const token = extractToken(res, 'token')
-                    console.log(token)
+
                     const accessPayload =
                         await tokenService.verifyAccessToken(token)
                     const refreshPayload =
@@ -177,34 +178,4 @@ describe('AuthController (e2e)', () => {
                 })
         })
     })
-
-    // describe.skip('/email-confirm (GET)', () => {
-    //     let token:IAccessToken
-    //
-    //     beforeAll(async () => {
-    //         await userRepository.query('TRUNCATE "user" CASCADE')
-    //         await request(app.getHttpServer())
-    //             .post('/auth/signup')
-    //             .send(signUpDtoMock)
-    //             .then(res => {
-    //                 if(res.error) throw { ...res.error }
-    //                 token=res.body as IAccessToken
-    //                 console.log('res',token)
-    //             })
-    //     })
-    //
-    //     it('', async () => {
-    //         return request(app.getHttpServer())
-    //             .get('/auth/email-confirm')
-    //             .set('User-Agent', 'test')
-    //             .query({token:token.accessToken})
-    //             .then(res=>{
-    //                 if(res.error) throw {...res.error }
-    //                 const result=res.body as IAccessToken
-    //
-    //                 expect(res.status).toBe(HttpStatus.OK)
-    //                 expect(result).toBeDefined()
-    //             })
-    //     })
-    // })
 })
