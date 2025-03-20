@@ -14,7 +14,7 @@ import { ConfigService } from '@nestjs/config'
 import { configServiceMock, responseMock } from '@libs/common'
 import { MailerService } from '@nestjs-modules/mailer'
 import { mailerMock } from '@src/mail/module-options/mocks'
-import { SignUpDto } from '@src/auth/dto'
+import { SignInDto, SignUpDto } from '@src/auth/dto'
 import { authTokensMock, signUpDtoMock } from '@src/auth/mocks'
 import { IAuthMess } from '@src/auth/types'
 import { Response } from 'express'
@@ -106,6 +106,29 @@ describe('AuthController', () => {
                 authTokens.refreshToken,
                 expect.any(Object),
             )
+            expect(result).toEqual({ accessToken: authTokens.accessToken })
+        })
+    })
+
+    describe('signIn', () => {
+        let authTokens: IAuthTokens
+        let response: Response
+        let agent: string
+        let signInDto: SignInDto
+
+        beforeEach(() => {
+            authTokens = authTokensMock
+            agent = 'agent'
+            response = responseMock as Response
+            signInDto = signUpDtoMock as SignInDto
+        })
+
+        it('should be signed in', async () => {
+            jest.spyOn(authService, 'signIn').mockResolvedValueOnce(authTokens)
+
+            const result = await controller.signIn(signInDto, response, agent)
+
+            expect(authService.signIn).toHaveBeenCalledWith(signInDto, agent)
             expect(result).toEqual({ accessToken: authTokens.accessToken })
         })
     })

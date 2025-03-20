@@ -14,14 +14,10 @@ import { Response } from 'express'
 import { cookieOptions, resOption } from '@libs/options'
 import { IAccessToken, IAuthMess } from '@src/auth/types'
 import { Cookie, UserAgent } from '@libs/decorators'
-import { ConfigService } from '@nestjs/config'
 
 @Controller('auth')
 export class AuthController {
-    constructor(
-        private readonly authService: AuthService,
-        private readonly configService: ConfigService,
-    ) {}
+    constructor(private readonly authService: AuthService) {}
 
     @Post('sign-up')
     @HttpCode(HttpStatus.OK)
@@ -42,7 +38,7 @@ export class AuthController {
         return { accessToken }
     }
 
-    @Post('signin')
+    @Post('sign-in')
     @HttpCode(HttpStatus.OK)
     async signIn(
         @Body() signInDto: SignInDto,
