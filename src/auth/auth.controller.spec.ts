@@ -11,12 +11,14 @@ import { Token } from '@src/token/entities'
 import { Role } from '@src/role/entities'
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
-import { configServiceMock } from '@libs/common'
+import { configServiceMock, responseMock } from '@libs/common'
 import { MailerService } from '@nestjs-modules/mailer'
 import { mailerMock } from '@src/mail/module-options/mocks'
 import { SignUpDto } from '@src/auth/dto'
-import { signUpDtoMock } from '@src/auth/mocks'
+import { authTokensMock, signUpDtoMock } from '@src/auth/mocks'
 import { IAuthMess } from '@src/auth/types'
+import { Response } from 'express'
+import { IAuthTokens } from '@src/token/types'
 
 describe('AuthController', () => {
     let controller: AuthController
@@ -74,6 +76,37 @@ describe('AuthController', () => {
             expect(authService.signUp).toHaveBeenCalledWith(body)
             expect(authService.signUp).toHaveBeenCalledTimes(1)
             expect(result).toEqual({ message: expect.any(String) })
+        })
+    })
+
+    describe('emailConfirm', () => {
+        let token: string
+        let agent: string
+        let response: Response
+        let authTokens: IAuthTokens
+
+        beforeEach(() => {
+            token = 'token'
+            agent = 'agent'
+            response = responseMock as Response
+            authTokens = authTokensMock
+        })
+
+        it('should be email confirmed', async () => {
+            jest.spyOn(authService, 'emailConfirm').mockResolvedValueOnce(
+                authTokens,
+            )
+            jest.spyOn(response, 'cookie').mockReturnThis()
+
+            const result = await controller.emailConfirm(token, agent, response)
+
+            expect(authService.emailConfirm).toHaveBeenCalledWith(token, agent)
+            expect(response.cookie).toHaveBeenCalledWith(
+                expect.any(String),
+                authTokens.refreshToken,
+                expect.any(Object),
+            )
+            expect(result).toEqual({ accessToken: authTokens.accessToken })
         })
     })
 })

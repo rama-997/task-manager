@@ -19,7 +19,7 @@ import { MailerService } from '@nestjs-modules/mailer'
 import { mailerMock } from '@src/mail/module-options/mocks'
 import { configServiceMock } from '@libs/common'
 import { Token } from '@src/token/entities'
-import { AuthTokens } from '@src/token/types'
+import { IAuthTokens } from '@src/token/types'
 import { RoleService } from '@src/role/role.service'
 import { Role } from '@src/role/entities'
 import { roleMock } from '@src/role/mocks'
@@ -65,7 +65,7 @@ describe('AuthService', () => {
         roleService = module.get<RoleService>(RoleService)
     })
 
-    it('should be defined', () => {
+    it('should be defined providers', () => {
         expect(service).toBeDefined()
         expect(tokenService).toBeDefined()
         expect(mailService).toBeDefined()
@@ -184,7 +184,7 @@ describe('AuthService', () => {
         let signInDto: SignInDto
         let agent: string
         let user: User
-        let authTokens: AuthTokens
+        let authTokens: IAuthTokens
 
         beforeEach(() => {
             signInDto = signUpDtoMock as SignInDto
@@ -266,7 +266,7 @@ describe('AuthService', () => {
         let agent: string
         let payload: { id: string }
         let user: User
-        let authTokens: AuthTokens
+        let authTokens: IAuthTokens
 
         beforeEach(async () => {
             token = 'token'
