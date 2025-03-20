@@ -96,8 +96,11 @@ export class AuthService {
     }
 
     async refreshToken(token: string, agent: string): Promise<IAuthTokens> {
-        const payload = await this.tokenService.refreshToken(token)
-        const user = await this.userRepository.findOneBy({ id: payload.id })
+        const payload = await this.tokenService.extractUserPayload(token)
+        const user = await this.userRepository.findOne({
+            where: { id: payload.id },
+            relations: ['roles'],
+        })
         if (!user) {
             throw new UnauthorizedException()
         }

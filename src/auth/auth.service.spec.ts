@@ -19,11 +19,12 @@ import { MailerService } from '@nestjs-modules/mailer'
 import { mailerMock } from '@src/mail/module-options/mocks'
 import { configServiceMock } from '@libs/common'
 import { Token } from '@src/token/entities'
-import { IAuthTokens } from '@src/token/types'
+import { IAuthTokens, UserPayload } from '@src/token/types'
 import { RoleService } from '@src/role/role.service'
 import { Role } from '@src/role/entities'
 import { roleMock } from '@src/role/mocks'
 import { ERoles } from '@src/role/types'
+import { userPayloadMock } from '@src/token/mocks'
 
 describe('AuthService', () => {
     let service: AuthService
@@ -280,7 +281,7 @@ describe('AuthService', () => {
             jest.spyOn(tokenService, 'verifyEmailToken').mockResolvedValueOnce(
                 payload,
             )
-            jest.spyOn(userRepository, 'findOneBy').mockResolvedValueOnce({
+            jest.spyOn(userRepository, 'findOne').mockResolvedValueOnce({
                 ...user,
                 id: payload.id,
             })
@@ -292,8 +293,9 @@ describe('AuthService', () => {
             const result = await service.emailConfirm(token, agent)
 
             expect(tokenService.verifyEmailToken).toHaveBeenCalledWith(token)
-            expect(userRepository.findOneBy).toHaveBeenCalledWith({
-                id: payload.id,
+            expect(userRepository.findOne).toHaveBeenCalledWith({
+                where: { id: payload.id },
+                relations: ['roles'],
             })
             expect(userRepository.save).toHaveBeenCalledWith({
                 ...user,
@@ -309,7 +311,7 @@ describe('AuthService', () => {
 
         it('token does not exist', async () => {
             jest.spyOn(tokenService, 'verifyEmailToken')
-            jest.spyOn(userRepository, 'findOneBy')
+            jest.spyOn(userRepository, 'findOne')
             jest.spyOn(userRepository, 'save')
             jest.spyOn(tokenService, 'authorization')
 
@@ -318,7 +320,7 @@ describe('AuthService', () => {
             )
 
             expect(tokenService.verifyEmailToken).not.toHaveBeenCalled()
-            expect(userRepository.findOneBy).not.toHaveBeenCalled()
+            expect(userRepository.findOne).not.toHaveBeenCalled()
             expect(userRepository.save).not.toHaveBeenCalled()
             expect(tokenService.authorization).not.toHaveBeenCalled()
         })
@@ -327,7 +329,7 @@ describe('AuthService', () => {
             jest.spyOn(tokenService, 'verifyEmailToken').mockResolvedValueOnce(
                 null,
             )
-            jest.spyOn(userRepository, 'findOneBy')
+            jest.spyOn(userRepository, 'findOne')
             jest.spyOn(userRepository, 'save')
             jest.spyOn(tokenService, 'authorization')
 
@@ -336,7 +338,7 @@ describe('AuthService', () => {
             )
 
             expect(tokenService.verifyEmailToken).toHaveBeenCalledWith(token)
-            expect(userRepository.findOneBy).not.toHaveBeenCalled()
+            expect(userRepository.findOne).not.toHaveBeenCalled()
             expect(userRepository.save).not.toHaveBeenCalled()
             expect(tokenService.authorization).not.toHaveBeenCalled()
         })
@@ -345,7 +347,7 @@ describe('AuthService', () => {
             jest.spyOn(tokenService, 'verifyEmailToken').mockResolvedValueOnce(
                 payload,
             )
-            jest.spyOn(userRepository, 'findOneBy').mockResolvedValueOnce(null)
+            jest.spyOn(userRepository, 'findOne').mockResolvedValueOnce(null)
             jest.spyOn(userRepository, 'save')
             jest.spyOn(tokenService, 'authorization')
 
@@ -354,10 +356,73 @@ describe('AuthService', () => {
             )
 
             expect(tokenService.verifyEmailToken).toHaveBeenCalledWith(token)
-            expect(userRepository.findOneBy).toHaveBeenCalledWith({
-                id: payload.id,
+            expect(userRepository.findOne).toHaveBeenCalledWith({
+                where: { id: payload.id },
+                relations: ['roles'],
             })
             expect(userRepository.save).not.toHaveBeenCalled()
+            expect(tokenService.authorization).not.toHaveBeenCalled()
+        })
+    })
+
+    describe('refreshToken', () => {
+        let token: string
+        let userAgent: string
+        let userPayload: UserPayload
+        let user: User
+        let authTokens: IAuthTokens
+
+        beforeEach(() => {
+            token = 'jwt token'
+            userAgent = 'supertest agent'
+            userPayload = userPayloadMock as UserPayload
+            user = userMock as User
+            authTokens = authTokensMock
+        })
+
+        it('should update token', async () => {
+            jest.spyOn(
+                tokenService,
+                'extractUserPayload',
+            ).mockResolvedValueOnce(userPayload)
+            jest.spyOn(userRepository, 'findOne').mockResolvedValueOnce(user)
+            jest.spyOn(tokenService, 'authorization').mockResolvedValueOnce(
+                authTokens,
+            )
+
+            const result = await service.refreshToken(token, userAgent)
+
+            expect(tokenService.extractUserPayload).toHaveBeenCalledWith(token)
+            expect(userRepository.findOne).toHaveBeenCalledWith({
+                where: { id: userPayload.id },
+                relations: ['roles'],
+            })
+            expect(tokenService.authorization).toHaveBeenCalledWith(
+                user,
+                userAgent,
+            )
+            expect(result).toEqual(authTokens)
+        })
+
+        it('should throw unAuth if user not found', async () => {
+            jest.spyOn(
+                tokenService,
+                'extractUserPayload',
+            ).mockResolvedValueOnce(userPayload)
+            jest.spyOn(userRepository, 'findOne').mockResolvedValueOnce(null)
+            jest.spyOn(tokenService, 'authorization').mockResolvedValueOnce(
+                authTokens,
+            )
+
+            await expect(
+                service.refreshToken(token, userAgent),
+            ).rejects.toThrow(UnauthorizedException)
+
+            expect(tokenService.extractUserPayload).toHaveBeenCalledWith(token)
+            expect(userRepository.findOne).toHaveBeenCalledWith({
+                where: { id: userPayload.id },
+                relations: ['roles'],
+            })
             expect(tokenService.authorization).not.toHaveBeenCalled()
         })
     })
