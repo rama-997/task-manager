@@ -10,6 +10,7 @@ import { User } from '@src/auth/entities'
 import { userMock } from '@src/auth/mocks'
 import { ConfigService } from '@nestjs/config'
 import { configServiceMock } from '@libs/common'
+import { UnauthorizedException } from '@nestjs/common'
 
 describe('TokenService', () => {
     let service: TokenService
@@ -79,8 +80,10 @@ describe('TokenService', () => {
         })
 
         it('should update token if it exist', async () => {
-            jest.spyOn(tokenRepository, 'findOneBy').mockResolvedValueOnce(token as Token)
-            jest.spyOn(tokenRepository,'save').mockResolvedValue({} as Token)
+            jest.spyOn(tokenRepository, 'findOneBy').mockResolvedValueOnce(
+                token as Token,
+            )
+            jest.spyOn(tokenRepository, 'save').mockResolvedValue({} as Token)
 
             await service.updateAuthToken(refreshToken, agent, userMock as User)
 
@@ -97,7 +100,7 @@ describe('TokenService', () => {
 
         it('should create token if it does not exist', async () => {
             jest.spyOn(tokenRepository, 'findOneBy').mockResolvedValueOnce(null)
-            jest.spyOn(tokenRepository,'save').mockResolvedValue({} as Token)
+            jest.spyOn(tokenRepository, 'save').mockResolvedValue({} as Token)
 
             await service.updateAuthToken(refreshToken, agent, userMock as User)
 
@@ -106,11 +109,82 @@ describe('TokenService', () => {
                 userAgent: agent,
             })
             expect(tokenRepository.save).toHaveBeenCalledWith({
-                userAgent:agent,
+                userAgent: agent,
                 users: [user],
                 refreshToken,
             })
             expect(tokenRepository.save).toHaveBeenCalledTimes(1)
+        })
+    })
+
+    describe('extractUserPayload', () => {
+        let token: string
+        let payload: UserPayload
+
+        beforeEach(() => {
+            token = 'jwt token'
+            payload = userPayloadMock as UserPayload
+        })
+
+        it('should return user payload', async () => {
+            jest.spyOn(tokenRepository, 'findOneBy').mockResolvedValueOnce({
+                refreshToken: 'jwt',
+            } as Token)
+            jest.spyOn(service, 'verifyRefreshToken').mockResolvedValueOnce(
+                payload,
+            )
+
+            const result = await service.extractUserPayload(token)
+
+            expect(tokenRepository.findOneBy).toHaveBeenCalledWith({
+                refreshToken: token,
+            })
+            expect(service.verifyRefreshToken).toHaveBeenCalledWith(token)
+            expect(result).toEqual(payload)
+        })
+
+        it('should throw if token does not exist', async () => {
+            jest.spyOn(tokenRepository, 'findOneBy')
+            jest.spyOn(service, 'verifyRefreshToken')
+
+            await expect(service.extractUserPayload('')).rejects.toThrow(
+                UnauthorizedException,
+            )
+
+            expect(tokenRepository.findOneBy).not.toHaveBeenCalled()
+            expect(service.verifyRefreshToken).not.toHaveBeenCalled()
+        })
+
+        it('should throw if token does not found', async () => {
+            jest.spyOn(tokenRepository, 'findOneBy').mockResolvedValueOnce(null)
+            jest.spyOn(service, 'verifyRefreshToken')
+
+            await expect(service.extractUserPayload(token)).rejects.toThrow(
+                UnauthorizedException,
+            )
+
+            expect(tokenRepository.findOneBy).toHaveBeenCalledWith({
+                refreshToken: token,
+            })
+            expect(service.verifyRefreshToken).not.toHaveBeenCalled()
+        })
+
+        it('should throw if token invalid', async () => {
+            jest.spyOn(tokenRepository, 'findOneBy').mockResolvedValueOnce({
+                refreshToken: 'jwt',
+            } as Token)
+            jest.spyOn(service, 'verifyRefreshToken').mockResolvedValueOnce(
+                null,
+            )
+
+            await expect(service.extractUserPayload(token)).rejects.toThrow(
+                UnauthorizedException,
+            )
+
+            expect(tokenRepository.findOneBy).toHaveBeenCalledWith({
+                refreshToken: token,
+            })
+            expect(service.verifyRefreshToken).toHaveBeenCalledWith(token)
         })
     })
 })
