@@ -26,7 +26,6 @@ export class AuthController {
     }
 
     @Get('email-confirm')
-    @HttpCode(HttpStatus.OK)
     async emailConfirm(
         @Query('token') token: string,
         @UserAgent() agent: string,
@@ -70,7 +69,7 @@ export class AuthController {
         const { token } = cookies
         const tokens = await this.authService.refreshToken(token, agent)
         res.cookie('token', tokens.refreshToken, cookieOptions)
-        res.status(HttpStatus.OK).json({ message: 'Refreshed' })
+        res.json({ message: 'Refreshed' })
     }
 
     @Get('reset-password')

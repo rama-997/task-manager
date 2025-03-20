@@ -156,4 +156,41 @@ describe('AuthController', () => {
             })
         })
     })
+
+    describe('refreshToken', () => {
+        let cookies: { token: string }
+        let response: Response
+        let userAgent: string
+        let authTokens: IAuthTokens
+
+        beforeEach(() => {
+            cookies = { token: 'jwt token' }
+            response = responseMock as Response
+            userAgent = 'agent'
+            authTokens = authTokensMock
+        })
+
+        it('should update refresh token', async () => {
+            jest.spyOn(authService, 'refreshToken').mockResolvedValueOnce(
+                authTokens,
+            )
+            jest.spyOn(response, 'cookie').mockReturnThis()
+            jest.spyOn(response, 'json').mockReturnThis()
+
+            await controller.refreshToken(cookies, userAgent, response)
+
+            expect(authService.refreshToken).toHaveBeenCalledWith(
+                cookies.token,
+                userAgent,
+            )
+            expect(response.cookie).toHaveBeenCalledWith(
+                'token',
+                expect.any(String),
+                expect.any(Object),
+            )
+            expect(response.json).toHaveBeenCalledWith({
+                message: expect.any(String),
+            })
+        })
+    })
 })
