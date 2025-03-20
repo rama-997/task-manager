@@ -15,8 +15,8 @@ export class Token {
     @Column({ name: 'refresh_token' })
     refreshToken: string
 
-    @Column({ name: 'user_agent' })
-    userAgent: string
+    @Column({ name: 'user_agent', nullable: true })
+    userAgent?: string
 
     @ManyToMany(() => User, user => user.tokens)
     @JoinTable({
