@@ -113,7 +113,7 @@ export class TokenService {
         await this.tokenRepository.delete({ refreshToken })
     }
 
-    async refreshToken(refreshToken: string): Promise<UserPayload> {
+    async extractUserPayload(refreshToken: string): Promise<UserPayload> {
         if (!refreshToken) {
             throw new UnauthorizedException()
         }
