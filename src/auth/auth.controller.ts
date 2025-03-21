@@ -9,7 +9,7 @@ import {
     Res,
 } from '@nestjs/common'
 import { AuthService } from './auth.service'
-import { ResetPassDto, SignInDto, SignUpDto } from '@src/auth/dto'
+import { EmailDto, SignInDto, SignUpDto } from '@src/auth/dto'
 import { Response } from 'express'
 import { cookieOptions, resOption } from '@libs/options'
 import { IAccessToken, IAuthMess } from '@src/auth/types'
@@ -72,6 +72,8 @@ export class AuthController {
         res.json({ message: 'Refreshed' })
     }
 
-    @Get('reset-password')
-    async resetPass(@Body() resetPassDto: ResetPassDto) {}
+    @Post('reset-password')
+    async resetPass(@Body() emailDto: EmailDto) {
+        await this.authService.resetPass(emailDto)
+    }
 }
