@@ -7,7 +7,7 @@ import {
 } from 'typeorm'
 import { TaskStatus } from '@src/tasks/types'
 
-@Entity('tasks')
+@Entity()
 export class Task {
     @PrimaryGeneratedColumn('uuid')
     readonly id?: string
