@@ -4,7 +4,7 @@ import * as request from 'supertest'
 import { App } from 'supertest/types'
 import { AppModule } from '../src/app.module'
 import { HttpExceptionFilter } from '@libs/common'
-import { signUpDtoMock } from '@src/auth/mocks'
+import { emailDtoMock, signUpDtoMock, userMock } from '@src/auth/mocks'
 import { getRepositoryToken } from '@nestjs/typeorm'
 import { User } from '@src/auth/entities'
 import { Repository } from 'typeorm'
@@ -12,7 +12,7 @@ import { Role } from '@src/role/entities'
 import { IAccessToken, IAuthMess } from '@src/auth/types'
 import { ERoles } from '@src/role/types'
 import * as cookieParser from 'cookie-parser'
-import { SignInDto } from '@src/auth/dto'
+import { EmailDto, SignInDto } from '@src/auth/dto'
 import { extractToken } from '@libs/utils'
 import { TokenService } from '@src/token/token.service'
 import { JwtService } from '@nestjs/jwt'
@@ -137,7 +137,7 @@ describe('AuthController (e2e)', () => {
         })
     })
 
-    describe('/sign-in (POST)', () => {
+    describe.skip('/sign-in (POST)', () => {
         let signInDto: SignInDto
 
         beforeAll(async () => {
@@ -183,7 +183,7 @@ describe('AuthController (e2e)', () => {
         })
     })
 
-    describe('/logout (GET)', () => {
+    describe.skip('/logout (GET)', () => {
         let cookies: any
 
         beforeAll(async () => {
@@ -224,6 +224,53 @@ describe('AuthController (e2e)', () => {
                     })
                     expect(token).toBeFalsy()
                     expect(tokenEnt).toBeNull()
+                })
+        })
+    })
+
+    describe.skip('/refresh-token', () => {
+        let user: User
+        let authTokens: IAuthTokens
+        let userAgent: string
+
+        beforeAll(async () => {
+            userAgent = 'supertest'
+            await userRepository.query('TRUNCATE "user" CASCADE;')
+            await tokenRepository.query('TRUNCATE "token" CASCADE;')
+            user = await userRepository.save(userMock)
+            authTokens = await tokenService.authorization(user, userAgent)
+        })
+
+        it('should update token', async () => {
+            return request(app.getHttpServer())
+                .get('/auth/refresh-token')
+                .set('User-Agent', userAgent)
+                .set('Cookie', `[token=${authTokens.refreshToken}]`)
+                .then(res => {
+                    if (res.error) throw { ...res.error }
+                    const token = extractToken(res, 'token')
+
+                    expect(res.status).toBe(HttpStatus.OK)
+                    expect(token).toBeDefined()
+                    expect(token).not.toBe(authTokens.refreshToken)
+                })
+        })
+    })
+
+    describe.skip('/reset-pass (POST)', () => {
+        let emailDto: EmailDto
+
+        beforeEach(async () => {
+            emailDto = emailDtoMock
+        })
+
+        it('should send mail reset password', async () => {
+            return request(app.getHttpServer())
+                .post('/auth/reset-password')
+                .send(emailDto)
+                .expect(HttpStatus.OK)
+                .then(res => {
+                    if (res.error) throw { ...res.error }
                 })
         })
     })

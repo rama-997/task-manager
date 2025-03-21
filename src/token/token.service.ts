@@ -138,4 +138,16 @@ export class TokenService {
             },
         )
     }
+
+    async verifyId(token: string) {
+        try {
+            return this.jwtService.verifyAsync<{ id: string }>(token, {
+                secret: this.configService.getOrThrow<string>(
+                    'RESET_PASS_SECRET',
+                ),
+            })
+        } catch (e) {
+            return null
+        }
+    }
 }

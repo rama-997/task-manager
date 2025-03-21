@@ -5,7 +5,7 @@ import {
     NotFoundException,
     UnauthorizedException,
 } from '@nestjs/common'
-import { EmailDto, SignInDto, SignUpDto } from '@src/auth/dto'
+import { EmailDto, PasswordDto, SignInDto, SignUpDto } from '@src/auth/dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { User } from '@src/auth/entities'
 import { Repository } from 'typeorm'
@@ -120,5 +120,22 @@ export class AuthService {
         }
         const token = await this.tokenService.signId(user.id)
         await this.mailService.resetPassMail(token, email)
+    }
+
+    async confirmPassword(
+        passwordDto: PasswordDto,
+        token: string,
+    ): Promise<void> {
+        const payload = await this.tokenService.verifyId(token)
+        if (!payload) {
+            throw new ForbiddenException()
+        }
+        const user = await this.userRepository.findOneBy({ id: payload.id })
+        if (!user) {
+            throw new ForbiddenException()
+        }
+        const hashPass = await hash(passwordDto.password, 3)
+        user.password = hashPass
+        await this.userRepository.save({ ...user, password: hashPass })
     }
 }
