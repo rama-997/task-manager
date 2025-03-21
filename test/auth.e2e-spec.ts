@@ -30,6 +30,7 @@ describe('AuthController (e2e)', () => {
     let userRepository: Repository<User>
     let roleRepository: Repository<Role>
     let tokenService: TokenService
+    let tokenRepository: Repository<Token>
 
     beforeAll(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -54,6 +55,9 @@ describe('AuthController (e2e)', () => {
         )
         roleRepository = moduleFixture.get<Repository<Role>>(
             getRepositoryToken(Role),
+        )
+        tokenRepository = moduleFixture.get<Repository<Token>>(
+            getRepositoryToken(Token),
         )
         tokenService = moduleFixture.get<TokenService>(TokenService)
 
@@ -175,6 +179,51 @@ describe('AuthController (e2e)', () => {
                     expect(accessPayload?.id).toBe(user!.id)
                     expect(res.status).toBe(HttpStatus.OK)
                     expect(result).toEqual({ accessToken: expect.any(String) })
+                })
+        })
+    })
+
+    describe('/logout (GET)', () => {
+        let cookies: any
+
+        beforeAll(async () => {
+            await roleRepository.query('TRUNCATE "role" CASCADE')
+            await userRepository.query('TRUNCATE "user" CASCADE')
+            await userRepository.save({
+                ...signUpDtoMock,
+                password:
+                    '$2a$04$rshjS4C4R1BOqrKbpPkn7u8xpSOtpTXEBgeRhTlmhxF5YCYc0JWUi',
+            })
+        })
+
+        it('should be logout', async () => {
+            await request(app.getHttpServer())
+                .post('/auth/sign-in')
+                .send({
+                    loginOrEmail: signUpDtoMock.email,
+                    password: signUpDtoMock.password,
+                })
+                .then(async res => {
+                    if (res.error) throw { ...res.error }
+                    cookies = res.headers['set-cookie']
+                })
+
+            return request(app.getHttpServer())
+                .get('/auth/logout')
+                .set('Cookie', cookies)
+                .then(async res => {
+                    if (res.error) throw { ...res.error }
+                    const result = res.body as { message: string }
+                    const token = extractToken(res, 'token')
+                    const tokenEnt = await tokenRepository.findOneBy({
+                        refreshToken: token,
+                    })
+
+                    expect(result).toMatchObject({
+                        message: expect.any(String),
+                    })
+                    expect(token).toBeFalsy()
+                    expect(tokenEnt).toBeNull()
                 })
         })
     })
