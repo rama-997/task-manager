@@ -10,7 +10,7 @@ import { HttpExceptionFilter } from '@libs/common'
 import { TokenService } from '@src/token/token.service'
 import { createRoleDtoMock, roleMock, updateRoleDtoMock } from '@src/role/mocks'
 import { userPayloadMock } from '@src/token/mocks'
-import { AuthTokens, UserPayload } from '@src/token/types'
+import { IAuthTokens, UserPayload } from '@src/token/types'
 import { ERoles } from '@src/role/types'
 
 describe('AppController (e2e)', () => {
@@ -44,10 +44,10 @@ describe('AppController (e2e)', () => {
         await app.close()
     })
 
-    describe('POST /role',()=>{
-        let authToken: AuthTokens
+    describe('POST /role', () => {
+        let authToken: IAuthTokens
 
-        beforeEach(async ()=>{
+        beforeEach(async () => {
             authToken = await tokenService.authTokens(
                 userPayloadMock as UserPayload,
             )
@@ -74,7 +74,7 @@ describe('AppController (e2e)', () => {
             return request(app.getHttpServer())
                 .post('/role')
                 .auth(authToken.accessToken, { type: 'bearer' })
-                .send({value:'bad value'})
+                .send({ value: 'bad value' })
                 .expect(HttpStatus.BAD_REQUEST)
         })
 
@@ -86,12 +86,11 @@ describe('AppController (e2e)', () => {
                 .send(createRoleDtoMock)
                 .expect(HttpStatus.CONFLICT)
         })
-
     })
 
     describe('GET /role/:id', () => {
         let role: Role
-        let authTokens: AuthTokens
+        let authTokens: IAuthTokens
 
         beforeEach(async () => {
             role = await roleRepo.save(createRoleDtoMock)
@@ -129,9 +128,9 @@ describe('AppController (e2e)', () => {
         })
     })
 
-    describe('PATCH /role/:id',()=>{
+    describe('PATCH /role/:id', () => {
         let role: Role
-        let authTokens: AuthTokens
+        let authTokens: IAuthTokens
 
         beforeEach(async () => {
             role = await roleRepo.save(createRoleDtoMock)
@@ -168,7 +167,7 @@ describe('AppController (e2e)', () => {
             return request(app.getHttpServer())
                 .patch(`/role/${role.id}`)
                 .auth(authTokens.accessToken, { type: 'bearer' })
-                .send({value:'some value'})
+                .send({ value: 'some value' })
                 .expect(HttpStatus.BAD_REQUEST)
         })
 
@@ -181,10 +180,11 @@ describe('AppController (e2e)', () => {
         })
 
         it('FORBIDDEN', async () => {
-            const {accessToken:forbiddenToken} = await tokenService.authTokens({
-                ...userPayloadMock,
-                roles: [ERoles.USER],
-            } as UserPayload)
+            const { accessToken: forbiddenToken } =
+                await tokenService.authTokens({
+                    ...userPayloadMock,
+                    roles: [ERoles.USER],
+                } as UserPayload)
 
             return request(app.getHttpServer())
                 .patch(`/role/${role.id}`)
@@ -192,12 +192,11 @@ describe('AppController (e2e)', () => {
                 .send(updateRoleDtoMock)
                 .expect(HttpStatus.FORBIDDEN)
         })
-
     })
 
     describe('DELETE /role/:id', () => {
         let role: Role
-        let authTokens: AuthTokens
+        let authTokens: IAuthTokens
 
         beforeEach(async () => {
             role = await roleRepo.save(createRoleDtoMock)
@@ -235,10 +234,11 @@ describe('AppController (e2e)', () => {
         })
 
         it('FORBIDDEN', async () => {
-            const {accessToken:forbiddenToken} = await tokenService.authTokens({
-                ...userPayloadMock,
-                roles: [ERoles.USER],
-            } as UserPayload)
+            const { accessToken: forbiddenToken } =
+                await tokenService.authTokens({
+                    ...userPayloadMock,
+                    roles: [ERoles.USER],
+                } as UserPayload)
 
             return request(app.getHttpServer())
                 .delete(`/role/${role.id}`)

@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, Param, ParseEnumPipe, ParseUUIDPipe, Patch, Post } from '@nestjs/common'
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    ParseEnumPipe,
+    ParseUUIDPipe,
+    Patch,
+    Post,
+} from '@nestjs/common'
 import { RoleService } from './role.service'
 import { Role } from '@src/role/entities'
 import { CreateRoleDto, UpdateRoleDto } from '@src/role/dto'
@@ -17,17 +27,24 @@ export class RoleController {
     }
 
     @Get(':value')
-    async finOne(@Param('value',new ParseEnumPipe(ERoles)) value: ERoles): Promise<Role> {
+    async finOne(
+        @Param('value', new ParseEnumPipe(ERoles)) value: ERoles,
+    ): Promise<Role> {
         return this.roleService.findOne(value)
     }
 
     @Patch(':id')
-    async update(@Param('id', new ParseUUIDPipe(parseUUIDConfig)) id:string,@Body() updateRoleDto:UpdateRoleDto):Promise<Role>{
+    async update(
+        @Param('id', new ParseUUIDPipe(parseUUIDConfig)) id: string,
+        @Body() updateRoleDto: UpdateRoleDto,
+    ): Promise<Role> {
         return this.roleService.update(id, updateRoleDto)
     }
 
     @Delete(':id')
-    async delete(@Param('id', new ParseUUIDPipe(parseUUIDConfig)) id: string): Promise<Role> {
+    async delete(
+        @Param('id', new ParseUUIDPipe(parseUUIDConfig)) id: string,
+    ): Promise<Role> {
         return this.roleService.delete(id)
     }
 }

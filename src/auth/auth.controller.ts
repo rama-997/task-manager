@@ -83,5 +83,8 @@ export class AuthController {
     async confirmPassword(
         @Body() passwordDto: PasswordDto,
         @Query('token') token: string,
-    ) {}
+    ) {
+        await this.authService.confirmPassword(passwordDto, token)
+        return true
+    }
 }

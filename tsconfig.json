@@ -73,6 +73,12 @@
       ],
       "@src/token/*": [
         "src/token/*"
+      ],
+      "@src/tasks": [
+        "src/tasks"
+      ],
+      "@src/tasks/*": [
+        "src/tasks/*"
       ]
     }
   }
