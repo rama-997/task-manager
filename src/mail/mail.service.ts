@@ -24,4 +24,16 @@ export class MailService {
             html,
         })
     }
+
+    async resetPassMail(token: string, to: string) {
+        const domain = this.configService.getOrThrow<string>('CLIENT_DOMAIN')
+        const html = await render(EmailTemplate({ domain, token }))
+
+        await this.mailerService.sendMail({
+            from: this.configService.getOrThrow<string>('MAILER_USER'),
+            to,
+            subject: 'Подтверждение почты',
+            html,
+        })
+    }
 }
