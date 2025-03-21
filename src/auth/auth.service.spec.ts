@@ -7,7 +7,7 @@ import { User } from '@src/auth/entities'
 import { Repository } from 'typeorm'
 import * as bcryptjs from 'bcryptjs'
 import { authTokensMock, signUpDtoMock, userMock } from '@src/auth/mocks'
-import { SignInDto, SignUpDto } from '@src/auth/dto'
+import { EmailDto, SignInDto, SignUpDto } from '@src/auth/dto'
 import {
     ConflictException,
     ForbiddenException,
@@ -448,6 +448,35 @@ describe('AuthService', () => {
                 relations: ['roles'],
             })
             expect(tokenService.authorization).not.toHaveBeenCalled()
+        })
+    })
+
+    describe('resetPass', () => {
+        let emailDto: EmailDto
+        let user: User
+        let token: string
+
+        beforeEach(() => {
+            emailDto = { email: 'test22011997@gmail.com' }
+            user = userMock as User
+            token = 'jwt token'
+        })
+
+        it('should send reset-pass mail', async () => {
+            jest.spyOn(userRepository, 'findOneBy').mockResolvedValueOnce(user)
+            jest.spyOn(tokenService, 'signId').mockResolvedValueOnce(token)
+            jest.spyOn(mailService, 'resetPassMail').mockResolvedValueOnce()
+
+            await service.resetPass(emailDto)
+
+            expect(userRepository.findOneBy).toHaveBeenCalledWith({
+                email: emailDto.email,
+            })
+            expect(tokenService.signId).toHaveBeenCalledWith(user.id)
+            expect(mailService.resetPassMail).toHaveBeenCalledWith(
+                token,
+                emailDto.email,
+            )
         })
     })
 })
