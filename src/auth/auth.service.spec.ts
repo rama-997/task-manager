@@ -10,6 +10,7 @@ import { authTokensMock, signUpDtoMock, userMock } from '@src/auth/mocks'
 import { SignInDto, SignUpDto } from '@src/auth/dto'
 import {
     ConflictException,
+    ForbiddenException,
     NotFoundException,
     UnauthorizedException,
 } from '@nestjs/common'
@@ -225,6 +226,29 @@ describe('AuthService', () => {
 
             await expect(service.signIn(signInDto, agent)).rejects.toThrow(
                 NotFoundException,
+            )
+
+            expect(userRepository.findOne).toHaveBeenCalledWith({
+                where: [
+                    { email: signInDto.loginOrEmail },
+                    { login: signInDto.loginOrEmail },
+                ],
+                relations: ['roles'],
+            })
+            expect(bcryptjs.compare).not.toHaveBeenCalled()
+            expect(tokenService.authorization).not.toHaveBeenCalled()
+        })
+
+        it('forbidden if user not confirm email', async () => {
+            jest.spyOn(userRepository, 'findOne').mockResolvedValueOnce({
+                ...user,
+                isConfirm: false,
+            })
+            jest.spyOn(bcryptjs, 'compare')
+            jest.spyOn(tokenService, 'authorization')
+
+            await expect(service.signIn(signInDto, agent)).rejects.toThrow(
+                ForbiddenException,
             )
 
             expect(userRepository.findOne).toHaveBeenCalledWith({

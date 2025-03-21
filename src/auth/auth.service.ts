@@ -1,5 +1,6 @@
 import {
     ConflictException,
+    ForbiddenException,
     Injectable,
     NotFoundException,
     UnauthorizedException,
@@ -63,6 +64,9 @@ export class AuthService {
             throw new NotFoundException(
                 'Такой логин или e-mail не зарегистрирован',
             )
+        }
+        if (!user?.isConfirm) {
+            throw new ForbiddenException('Подтвердите свою почту.')
         }
         const isCorrectPass = await compare(signInDto.password, user.password)
         if (!isCorrectPass) {
