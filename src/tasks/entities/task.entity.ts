@@ -1,34 +1,29 @@
 import {
-    Entity,
-    PrimaryGeneratedColumn,
     Column,
     CreateDateColumn,
+    Entity,
+    PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm'
-
-export enum TaskStatus {
-    TODO = 'TODO',
-    IN_PROGRESS = 'IN_PROGRESS',
-    DONE = 'DONE',
-}
+import { TaskStatus } from '@src/tasks/types'
 
 @Entity('tasks')
 export class Task {
-    @PrimaryGeneratedColumn()
-    id: number
+    @PrimaryGeneratedColumn('uuid')
+    readonly id?: string
 
     @Column()
     title: string
 
-    @Column({ type: 'text' })
+    @Column()
     description: string
 
     @Column({ type: 'enum', enum: TaskStatus, default: TaskStatus.TODO })
     status: TaskStatus
 
-    @CreateDateColumn()
-    createdAt: Date
+    @CreateDateColumn({ name: 'created_at' })
+    readonly createdAt?: Date
 
-    @UpdateDateColumn()
-    updatedAt: Date
+    @UpdateDateColumn({ name: 'updated_at' })
+    readonly updatedAt?: Date
 }

@@ -1,26 +1,38 @@
-import { Injectable } from '@nestjs/common';
-import { CreateTaskDto } from './dto/create-task.dto';
-import { UpdateTaskDto } from './dto/update-task.dto';
+import { ConflictException, Injectable } from '@nestjs/common'
+import { CreateTaskDto, UpdateTaskDto } from '@src/tasks/dto'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Task } from '@src/tasks/entities'
+import { Repository } from 'typeorm'
 
 @Injectable()
 export class TasksService {
-  create(createTaskDto: CreateTaskDto) {
-    return 'This action adds a new task';
-  }
+    constructor(
+        @InjectRepository(Task) private readonly TaskRepo: Repository<Task>,
+    ) {}
 
-  findAll() {
-    return `This action returns all tasks`;
-  }
+    async create(createTaskDto: CreateTaskDto): Promise<Task> {
+        const task = await this.TaskRepo.findOneBy({
+            title: createTaskDto.title,
+        })
+        if (task) {
+            throw new ConflictException('Такая задача уже есть')
+        }
+        return this.TaskRepo.save(createTaskDto)
+    }
 
-  findOne(id: number) {
-    return `This action returns a #${id} task`;
-  }
+    findAll() {
+        return `This action returns all tasks`
+    }
 
-  update(id: number, updateTaskDto: UpdateTaskDto) {
-    return `This action updates a #${id} task`;
-  }
+    findOne(id: number) {
+        return `This action returns a #${id} task`
+    }
 
-  remove(id: number) {
-    return `This action removes a #${id} task`;
-  }
+    update(id: number, updateTaskDto: UpdateTaskDto) {
+        return `This action updates a #${id} task`
+    }
+
+    remove(id: number) {
+        return `This action removes a #${id} task`
+    }
 }
