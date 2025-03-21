@@ -128,9 +128,9 @@ export class TokenService {
         return payload
     }
 
-    async verifyPasswordReset(email: string): Promise<string> {
+    async signId(id: string): Promise<string> {
         return this.jwtService.signAsync(
-            { email },
+            { id },
             {
                 secret: this.configService.getOrThrow<string>(
                     'RESET_PASS_SECRET',
