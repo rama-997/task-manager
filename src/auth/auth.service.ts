@@ -5,7 +5,7 @@ import {
     NotFoundException,
     UnauthorizedException,
 } from '@nestjs/common'
-import { ResetPassDto, SignInDto, SignUpDto } from '@src/auth/dto'
+import { EmailDto, SignInDto, SignUpDto } from '@src/auth/dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { User } from '@src/auth/entities'
 import { Repository } from 'typeorm'
@@ -111,15 +111,14 @@ export class AuthService {
         return this.tokenService.authorization(user, agent)
     }
 
-    async resetPass(resetPassDto: ResetPassDto) {
+    async resetPass({ email }: EmailDto): Promise<void> {
         const user = await this.userRepository.findOneBy({
-            email: resetPassDto.email,
+            email,
         })
         if (!user) {
             throw new NotFoundException('email dose not found')
         }
-        const token = await this.tokenService.verifyPasswordReset(
-            resetPassDto.email,
-        )
+        const token = await this.tokenService.signId(user.id)
+        await this.mailService.resetPassMail(token, email)
     }
 }
