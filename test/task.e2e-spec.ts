@@ -7,19 +7,22 @@ import { configServiceMock, HttpExceptionFilter } from '@libs/common'
 import * as cookieParser from 'cookie-parser'
 import { createTaskDtoMock } from '@src/tasks/mocks'
 import { TokenService } from '@src/token/token.service'
-import { IAuthTokens, UserPayload } from '@src/token/types'
-import { userPayloadMock } from '@src/token/mocks'
+import { IAuthTokens } from '@src/token/types'
 import { Task } from '@src/tasks/entities'
 import { JwtService } from '@nestjs/jwt'
 import { getRepositoryToken } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { Token } from '@src/token/entities'
 import { ConfigService } from '@nestjs/config'
+import { User } from '@src/auth/entities'
+import { userMock } from '@src/auth/mocks'
+import { ERoles } from '@src/role/types'
 
 describe('AppController (e2e)', () => {
     let app: INestApplication<App>
     let tokenService: TokenService
     let taskRepo: Repository<Task>
+    let userRepo: Repository<User>
 
     beforeAll(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -30,6 +33,7 @@ describe('AppController (e2e)', () => {
                 { provide: ConfigService, useValue: configServiceMock },
                 { provide: getRepositoryToken(Token), useClass: Repository },
                 { provide: getRepositoryToken(Task), useClass: Repository },
+                { provide: getRepositoryToken(User), useClass: Repository },
             ],
         }).compile()
 
@@ -41,21 +45,21 @@ describe('AppController (e2e)', () => {
 
         tokenService = moduleFixture.get<TokenService>(TokenService)
         taskRepo = moduleFixture.get<Repository<Task>>(getRepositoryToken(Task))
+        userRepo = moduleFixture.get<Repository<User>>(getRepositoryToken(User))
 
         await app.init()
     })
 
     describe('/ (POST)', () => {
         let authTokens: IAuthTokens
-
-        beforeAll(async () => {
-            authTokens = await tokenService.authTokens(
-                userPayloadMock as UserPayload,
-            )
-        })
+        let user: User
 
         beforeEach(async () => {
-            await taskRepo.query('TRUNCATE task CASCADE;')
+            user = await userRepo.save(userMock)
+            authTokens = await tokenService.authTokens({
+                id: user.id,
+                roles: [ERoles.ADMIN],
+            })
         })
 
         it('should create task', async () => {

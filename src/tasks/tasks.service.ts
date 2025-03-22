@@ -1,4 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common'
+import {
+    ConflictException,
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common'
 import { CreateTaskDto, UpdateTaskDto } from '@src/tasks/dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Task } from '@src/tasks/entities'
@@ -7,32 +11,54 @@ import { Repository } from 'typeorm'
 @Injectable()
 export class TasksService {
     constructor(
-        @InjectRepository(Task) private readonly TaskRepo: Repository<Task>,
+        @InjectRepository(Task) private readonly taskRepo: Repository<Task>,
     ) {}
 
-    async create(createTaskDto: CreateTaskDto): Promise<Task> {
-        const task = await this.TaskRepo.findOneBy({
+    async create(createTaskDto: CreateTaskDto, userId: string): Promise<Task> {
+        const task = await this.taskRepo.findOneBy({
             title: createTaskDto.title,
+            user: { id: userId },
         })
         if (task) {
-            throw new ConflictException('Такая задача уже есть')
+            throw new ConflictException('Такая задача уже существует')
         }
-        return this.TaskRepo.save(createTaskDto)
+        return this.taskRepo.save({ ...createTaskDto, user: { id: userId } })
     }
 
-    findAll() {
-        return `This action returns all tasks`
+    async findAll(userId: string): Promise<Task[]> {
+        return await this.taskRepo.find({ where: { user: { id: userId } } })
     }
 
-    findOne(id: number) {
-        return `This action returns a #${id} task`
+    async findOne(id: string, userId: string): Promise<Task> {
+        const task = await this.taskRepo.findOne({
+            where: { id, user: { id: userId } },
+        })
+        if (!task) throw new NotFoundException('Задача не найдена')
+        return task
     }
 
-    update(id: number, updateTaskDto: UpdateTaskDto) {
-        return `This action updates a #${id} task`
+    async update(
+        id: string,
+        dto: UpdateTaskDto,
+        userId: string,
+    ): Promise<Task> {
+        const task = await this.taskRepo.findOne({
+            where: { id, user: { id: userId } },
+        })
+        if (!task) throw new NotFoundException('Задача не найдена')
+        return await this.taskRepo.save({
+            ...task,
+            ...dto,
+            user: { id: userId },
+        })
     }
 
-    remove(id: number) {
-        return `This action removes a #${id} task`
+    async delete(id: string, userId: string): Promise<void> {
+        const task = await this.taskRepo.findOne({
+            where: { id, user: { id: userId } },
+        })
+        if (!task) throw new NotFoundException('Задача не найдена')
+        const result = await this.taskRepo.delete(task)
+        if (!result.affected) throw new NotFoundException('Задача не найдена')
     }
 }

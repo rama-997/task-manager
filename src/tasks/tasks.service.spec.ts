@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing'
-import { TasksService } from './tasks.service'
-import { Repository } from 'typeorm'
 import { Task } from '@src/tasks/entities'
+import { Repository } from 'typeorm'
 import { getRepositoryToken } from '@nestjs/typeorm'
 import { CreateTaskDto } from '@src/tasks/dto'
 import { createTaskDtoMock, taskMock } from '@src/tasks/mocks'
+import { TasksService } from '@src/tasks/tasks.service'
 import { ConflictException } from '@nestjs/common'
 
-describe('TasksService', () => {
+describe('TaskService', () => {
     let service: TasksService
-    let taskRepo: Repository<Task>
+    let taskRepository: Repository<Task>
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
@@ -20,51 +20,60 @@ describe('TasksService', () => {
         }).compile()
 
         service = module.get<TasksService>(TasksService)
-        taskRepo = module.get<Repository<Task>>(getRepositoryToken(Task))
+        taskRepository = module.get<Repository<Task>>(getRepositoryToken(Task))
     })
 
     it('should be defined providers', () => {
         expect(service).toBeDefined()
-        expect(taskRepo).toBeDefined()
+        expect(taskRepository).toBeDefined()
     })
 
     describe('create', () => {
-        let createTakDto: CreateTaskDto
         let task: Task
+        let createTaskDto: CreateTaskDto
+        let userId: string
 
         beforeEach(() => {
-            createTakDto = createTaskDtoMock
+            userId = 'id'
+            createTaskDto = createTaskDtoMock
             task = taskMock as Task
         })
 
-        it('should be able to create a task', async () => {
-            jest.spyOn(taskRepo, 'findOneBy').mockResolvedValueOnce(null)
-            jest.spyOn(taskRepo, 'save').mockResolvedValueOnce({
+        it('should create task', async () => {
+            jest.spyOn(taskRepository, 'findOneBy').mockResolvedValueOnce(null)
+            jest.spyOn(taskRepository, 'save').mockResolvedValueOnce({
+                ...createTaskDto,
                 ...task,
-                ...createTakDto,
             })
 
-            const result = await service.create(createTakDto)
+            const result = await service.create(createTaskDto, userId)
 
-            expect(taskRepo.findOneBy).toHaveBeenCalledWith({
-                title: createTakDto.title,
+            expect(taskRepository.findOneBy).toHaveBeenCalledWith({
+                title: createTaskDto.title,
+                user: { id: userId },
             })
-            expect(taskRepo.save).toHaveBeenCalledWith(createTakDto)
-            expect(result).toEqual({ ...task, ...createTakDto })
+            expect(taskRepository.save).toHaveBeenCalledWith({
+                ...createTaskDto,
+                user: { id: userId },
+            })
+            expect(result).toEqual(
+                expect.objectContaining({ ...createTaskDto, ...task }),
+            )
         })
 
         it('should throw if task exist', async () => {
-            jest.spyOn(taskRepo, 'findOneBy').mockResolvedValueOnce(task)
-            jest.spyOn(taskRepo, 'save')
+            jest.spyOn(taskRepository, 'findOneBy').mockResolvedValueOnce(task)
+            jest.spyOn(taskRepository, 'save')
 
-            await expect(service.create(createTakDto)).rejects.toThrow(
+            await expect(service.create(createTaskDto, userId)).rejects.toThrow(
                 ConflictException,
             )
 
-            expect(taskRepo.findOneBy).toHaveBeenCalledWith({
-                title: createTakDto.title,
+            expect(taskRepository.findOneBy).toHaveBeenCalledWith({
+                title: createTaskDto.title,
+                user: { id: userId },
             })
-            expect(taskRepo.save).not.toHaveBeenCalled()
+            expect(taskRepository.save).not.toHaveBeenCalled()
         })
     })
 })
