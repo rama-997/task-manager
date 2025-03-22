@@ -15,9 +15,11 @@ import { CreateRoleDto, UpdateRoleDto } from '@src/role/dto'
 import { AuthDecorator } from '@libs/decorators'
 import { ERoles } from '@src/role/types'
 import { parseUUIDConfig } from '@libs/configs'
+import { ApiExcludeController } from '@nestjs/swagger'
 
 @Controller('role')
 @AuthDecorator(ERoles.ADMIN)
+@ApiExcludeController()
 export class RoleController {
     constructor(private readonly roleService: RoleService) {}
 

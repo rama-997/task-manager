@@ -1,5 +1,6 @@
 import { IsStrongPassword } from 'class-validator'
 import { Match } from '@libs/decorators'
+import { ApiProperty } from '@nestjs/swagger'
 
 export class PasswordDto {
     @IsStrongPassword(
@@ -14,8 +15,16 @@ export class PasswordDto {
             message: 'Password must have at least 6 characters',
         },
     )
+    @ApiProperty({
+        type: 'string',
+        name: 'password',
+    })
     password: string
 
     @Match('password')
+    @ApiProperty({
+        type: 'string',
+        name: 'passwordConfirm',
+    })
     passwordConfirm: string
 }
