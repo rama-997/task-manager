@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Role } from '@src/role/entities'
 import { Repository } from 'typeorm'
@@ -11,32 +11,27 @@ export class RoleService {
         @InjectRepository(Role) private readonly roleRepo: Repository<Role>,
     ) {}
 
-    async create(createRoleDto: CreateRoleDto): Promise<Role> {
-        const role=await this.roleRepo.findOneBy({value:createRoleDto.value})
-        if(role){
-            throw new ConflictException('Роль уже существует')
-        }
-        return this.roleRepo.save(createRoleDto)
+    async create(createRoleDto: CreateRoleDto): Promise<Role | null> {
+        return await this.roleRepo.findOneBy({ value: createRoleDto.value })
     }
 
-    async findOne(value:ERoles): Promise<Role> {
-        const role=await this.roleRepo.findOneBy({value})
-        if(!role){
+    async findOne(value: ERoles): Promise<Role> {
+        const role = await this.roleRepo.findOneBy({ value })
+        if (!role) {
             throw new NotFoundException('Нет роли')
         }
         return role
     }
 
-    async update(id:string, updateRoleDto:UpdateRoleDto):Promise<Role>{
-        let role=await this.roleRepo.findOneBy({id})
-        if(!role){
+    async update(id: string, updateRoleDto: UpdateRoleDto): Promise<Role> {
+        let role = await this.roleRepo.findOneBy({ id })
+        if (!role) {
             throw new NotFoundException('Нет роли')
         }
-        return this.roleRepo.save(Object.assign(role,updateRoleDto))
-
+        return this.roleRepo.save(Object.assign(role, updateRoleDto))
     }
 
-    async delete(id:string):Promise<Role>{
-        return this.roleRepo.delete(id).then(res=>res.raw)
+    async delete(id: string): Promise<Role> {
+        return this.roleRepo.delete(id).then(res => res.raw)
     }
 }
