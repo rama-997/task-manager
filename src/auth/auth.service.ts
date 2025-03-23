@@ -41,7 +41,10 @@ export class AuthService {
             throw new ConflictException('Такой логин уже занят')
         }
         const hashedPass = await hash(signUpDto.password, 3)
-        const role = await this.roleService.findOne(ERoles.USER)
+        let role = await this.roleService.findOne(ERoles.USER)
+        if (!role) {
+            role = await this.roleService.create({ value: ERoles.USER })
+        }
         const user = await this.userRepository.save({
             ...signUpDto,
             password: hashedPass,

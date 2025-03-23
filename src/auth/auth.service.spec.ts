@@ -94,6 +94,7 @@ describe('AuthService', () => {
             jest.spyOn(userRepository, 'findOneBy').mockResolvedValue(null)
             jest.spyOn(bcryptjs, 'hash').mockReturnValueOnce(hashedPass as any)
             jest.spyOn(roleService, 'findOne').mockResolvedValueOnce(role)
+            jest.spyOn(roleService, 'create').mockResolvedValueOnce(role)
             jest.spyOn(userRepository, 'save').mockResolvedValueOnce({
                 ...user,
                 ...signUpDto,
@@ -134,6 +135,7 @@ describe('AuthService', () => {
             )
             jest.spyOn(bcryptjs, 'hash')
             jest.spyOn(roleService, 'findOne')
+            jest.spyOn(roleService, 'create')
             jest.spyOn(userRepository, 'save')
             jest.spyOn(tokenService, 'emailToken')
             jest.spyOn(mailService, 'signUpMail')
