@@ -5,23 +5,19 @@
 ### 1. Клонирование репозитория
 ```sh
 git clone https://github.com/rama-997/task-manager.git
-cd auth
 ```
 
-### 2. Создание файла `.env`
-В проекте используется .dev.env, убедитесь, что в нем указаны корректные данные.
-
-### 3. Запуск проекта в Docker
+### 2. Запуск проекта в Docker
 ```sh
-docker-compose up -d
+docker-compose --env-file .dev.env up -d
 ```
 
-### 4. Применение миграций
+### 3. Применение миграций
 ```sh
 npm run mig:run
 ```
 
-### 5. Запустить проекта
+### 4. Запустить проекта
 ```sh
 npm install
 npm run start:dev
