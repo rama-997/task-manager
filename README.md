@@ -12,14 +12,18 @@ git clone https://github.com/rama-997/task-manager.git
 docker-compose --env-file .dev.env up -d
 ```
 
-### 3. Применение миграций
+### 3. Установка зависимостей
+```sh
+npm install
+```
+
+### 4. Применение миграций
 ```sh
 npm run mig:run
 ```
 
-### 4. Запустить проекта
+### 5. Запустить проекта
 ```sh
-npm install
 npm run start:dev
 ```
 
