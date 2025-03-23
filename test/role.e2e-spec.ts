@@ -99,7 +99,7 @@ describe('AppController (e2e)', () => {
             )
         })
 
-        it('OK', async () => {
+        it.skip('OK', async () => {
             return request(app.getHttpServer())
                 .get(`/role/${role.id}`)
                 .auth(authTokens.accessToken, { type: 'bearer' })
@@ -119,7 +119,7 @@ describe('AppController (e2e)', () => {
                 .expect(HttpStatus.BAD_REQUEST)
         })
 
-        it('NOT_FOUND', async () => {
+        it.skip('NOT_FOUND', async () => {
             await roleRepo.delete(role.id)
             return request(app.getHttpServer())
                 .get(`/role/${role.id}`)

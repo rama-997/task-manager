@@ -37,18 +37,20 @@ export class TasksController {
         status: HttpStatus.CONFLICT,
     })
     @ApiBody({ type: CreateTaskDto, description: 'Create task dto' })
-    create(
+    async create(
         @Body() createTaskDto: CreateTaskDto,
         @UserId() userId: string,
     ): Promise<Task | null> {
-        return this.tasksService.create(createTaskDto, userId)
+        const task = await this.tasksService.create(createTaskDto, userId)
+        return new Task(task!)
     }
 
     @Get()
     @ApiOperation({ summary: 'Get all tasks' })
     @ApiResponse({ type: [Task], status: HttpStatus.OK })
-    findAll(@UserId() userId: string): Promise<Task[]> {
-        return this.tasksService.findAll(userId)
+    async findAll(@UserId() userId: string): Promise<Task[]> {
+        const tasks = await this.tasksService.findAll(userId)
+        return tasks.map(task => new Task(task))
     }
 
     @Get(':id')
@@ -64,8 +66,9 @@ export class TasksController {
         example: '550e8400-e29b-41d4-a716-446655440000',
         description: 'User uuid',
     })
-    findOne(@Param('id') id: string, @UserId() userId: string) {
-        return this.tasksService.findOne(id, userId)
+    async findOne(@Param('id') id: string, @UserId() userId: string) {
+        const task = await this.tasksService.findOne(id, userId)
+        return new Task(task)
     }
 
     @Patch(':id')
@@ -83,12 +86,13 @@ export class TasksController {
         status: HttpStatus.NOT_FOUND,
         description: 'Задача не найдена',
     })
-    update(
+    async update(
         @Param('id') id: string,
         @Body() updateTaskDto: UpdateTaskDto,
         @UserId() userId: string,
     ) {
-        return this.tasksService.update(id, updateTaskDto, userId)
+        const task = await this.tasksService.update(id, updateTaskDto, userId)
+        return new Task(task!)
     }
 
     @Delete(':id')
@@ -100,8 +104,9 @@ export class TasksController {
         example: '550e8400-e29b-41d4-a716-446655440000',
         description: 'User uuid',
     })
-    @ApiResponse({ status: HttpStatus.OK })
-    remove(@Param('id') id: string, @UserId() userId: string) {
-        return this.tasksService.delete(id, userId)
+    @ApiResponse({ status: HttpStatus.OK, description: 'success remove' })
+    async remove(@Param('id') id: string, @UserId() userId: string) {
+        await this.tasksService.delete(id, userId)
+        return { message: 'success remove' }
     }
 }

@@ -1,7 +1,11 @@
-import { NestFactory } from '@nestjs/core'
+import { NestFactory, Reflector } from '@nestjs/core'
 import { AppModule } from './app.module'
 import { ConfigService } from '@nestjs/config'
-import { Logger, ValidationPipe } from '@nestjs/common'
+import {
+    ClassSerializerInterceptor,
+    Logger,
+    ValidationPipe,
+} from '@nestjs/common'
 import { HttpExceptionFilter } from '@libs/common'
 import * as cookieParser from 'cookie-parser'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
@@ -10,6 +14,9 @@ async function bootstrap() {
     const app = await NestFactory.create(AppModule)
     app.useGlobalFilters(new HttpExceptionFilter())
     app.useGlobalPipes(new ValidationPipe({ transform: true }))
+    app.useGlobalInterceptors(
+        new ClassSerializerInterceptor(app.get(Reflector)),
+    )
     app.setGlobalPrefix('api')
 
     app.use(cookieParser())

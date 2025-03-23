@@ -10,10 +10,7 @@ import {
 import { TaskStatus } from '@src/tasks/types'
 import { User } from '@src/auth/entities'
 import { ApiProperty } from '@nestjs/swagger'
-
-class UserId {
-    id: string
-}
+import { Exclude } from 'class-transformer'
 
 @Entity()
 export class Task {
@@ -59,6 +56,7 @@ export class Task {
         description: 'user entity',
         name: 'user',
     })
+    @Exclude()
     user: User
 
     @CreateDateColumn({ name: 'created_at' })
@@ -76,4 +74,8 @@ export class Task {
         type: 'string',
     })
     readonly updatedAt?: Date
+
+    constructor(partial: Partial<Task>) {
+        Object.assign(this, partial)
+    }
 }
