@@ -18,7 +18,6 @@ import {
     ApiBody,
     ApiExcludeEndpoint,
     ApiOperation,
-    ApiQuery,
     ApiResponse,
     ApiTags,
 } from '@nestjs/swagger'
@@ -53,13 +52,14 @@ export class AuthController {
     }
 
     @Get('email-confirm')
-    @ApiOperation({ summary: 'email-confirm' })
-    @ApiQuery({ name: 'email-confirm' })
-    @ApiResponse({
-        status: HttpStatus.OK,
-        type: 'string',
-        description: 'jwt token',
-    })
+    @ApiExcludeEndpoint()
+    // @ApiOperation({ summary: 'email-confirm' })
+    // @ApiQuery({ name: 'email-confirm' })
+    // @ApiResponse({
+    //     status: HttpStatus.OK,
+    //     type: 'string',
+    //     description: 'jwt token',
+    // })
     async emailConfirm(
         @Query('token') token: string,
         @UserAgent() agent: string,
@@ -111,8 +111,9 @@ export class AuthController {
     }
 
     @Get('refresh-token')
-    @ApiOperation({ summary: 'refresh-token' })
-    @ApiResponse({ status: HttpStatus.OK })
+    // @ApiOperation({ summary: 'refresh-token' })
+    // @ApiResponse({ status: HttpStatus.OK })
+    @ApiExcludeEndpoint()
     async refreshToken(
         @Cookie() cookies: any,
         @UserAgent() agent: string,
