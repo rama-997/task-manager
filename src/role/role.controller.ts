@@ -31,7 +31,7 @@ export class RoleController {
     @Get(':value')
     async finOne(
         @Param('value', new ParseEnumPipe(ERoles)) value: ERoles,
-    ): Promise<Role> {
+    ): Promise<Role | null> {
         return this.roleService.findOne(value)
     }
 
